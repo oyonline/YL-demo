@@ -7,7 +7,7 @@
  * PatientCtx：裸 Context 对象，供 EscalationCard 等需要在无 Provider 时也能安全读的场景使用。
  */
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import type { Patient, TaskDef, Therapist, VideoAsset } from './types'
 import type { GuidanceCard } from './guidance'
 import type { PresetQA } from './qa'
@@ -30,18 +30,31 @@ const ContentCtx = createContext<ContentValue | null>(null)
 export function ContentProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<ContentValue | null>(null)
 
-  useEffect(() => {
-    let alive = true
-    void (async () => {
-      try {
-        const res = await authFetch('/api/content')
-        if (!res.ok) return
-        const json = await res.json()
-        if (alive) setData(json)
-      } catch { /* 网络异常由调用方兜底 */ }
-    })()
-    return () => { alive = false }
+  const loadContent = useCallback(async () => {
+    try {
+      const res = await authFetch('/api/content')
+      if (!res.ok) return
+      setData(await res.json())
+    } catch { /* 网络异常时保留最近一次可用内容 */ }
   }, [])
+
+  useEffect(() => {
+    void loadContent()
+
+    // 内容可能在另一页由康复师审核。用户切回患者端时重新拉取，避免继续使用
+    // 打开页面时的旧审核快照；同页审核广播也沿用同一刷新入口。
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === 'visible') void loadContent()
+    }
+    window.addEventListener('focus', refreshWhenVisible)
+    document.addEventListener('visibilitychange', refreshWhenVisible)
+    window.addEventListener('kfzl:review-changed', refreshWhenVisible)
+    return () => {
+      window.removeEventListener('focus', refreshWhenVisible)
+      document.removeEventListener('visibilitychange', refreshWhenVisible)
+      window.removeEventListener('kfzl:review-changed', refreshWhenVisible)
+    }
+  }, [loadContent])
 
   if (!data) return null
   return <ContentCtx.Provider value={data}>{children}</ContentCtx.Provider>

@@ -15,6 +15,10 @@ export const APPROVED_PRESET_QA: Readonly<Record<string, string>> = {
   'bp-high': '1a8a3bb64700621d36f093ee97d7efa0967d2fcb5f423b3a3e7e9fa6ec86119a',
   'sore-legs': 'e5b15c230b30786a54c85535c8fb270a18e9d18a340c629e4510366e96423747',
   meals: '30f95180e0c1accab2c6a33a96210a077127298875b80f37609578fcff807925',
+  'hypertensive-crisis': '0f45119b74b670654414c1776428a6b75b4194bb1a3bc54195077e87353829ec',
+  'tube-medication': '82cf915ef4daf9d04036c94d38921ff1559437b52906b625573ada58072ca1e6',
+  'limb-rehab': '6a8fcec5021ec29b1796c5ddd5a4ff1f01d32da0078bdd31da71daf21de35e04',
+  'ng-tube-change': 'a1e13ebc05c001a1ae0593ab67e3075862a3b166919a3da1b3931d924f8575fc',
 }
 
 export const APPROVED_GUIDANCE: Readonly<Record<string, string>> = {

@@ -12,9 +12,9 @@ import {
 } from '../server/content/approval-manifest.ts'
 
 describe('已确认内容版本清单', () => {
-  it('只覆盖用户本次确认的 5 + 5 + 3 个固定版本', () => {
+  it('只覆盖已正式审核的 9 + 5 + 3 个固定版本', () => {
     expect(PRESET_QA.filter((item) =>
-      isApprovedVersion(APPROVED_PRESET_QA, item.id, hashApprovedContent(item)))).toHaveLength(5)
+      isApprovedVersion(APPROVED_PRESET_QA, item.id, hashApprovedContent(item)))).toHaveLength(9)
     expect(GUIDANCE.filter((item) =>
       isApprovedVersion(APPROVED_GUIDANCE, item.id, hashApprovedContent(item)))).toHaveLength(5)
     expect(Object.entries(VIDEO_STEPS).filter(([id, steps]) =>
