@@ -15,7 +15,7 @@ afterAll(() => closeDb())
 describe('种子数据', () => {
   it('灌出两个可登录账号', () => {
     const rows = getDb().prepare('SELECT username, role, status FROM users ORDER BY username').all() as any[]
-    expect(rows.map((r) => r.username)).toContain('chen')
+    expect(rows.map((r) => r.username)).toContain('liying')
     expect(rows.map((r) => r.username)).toContain('zhou')
     // 停用账号登不进来，见 requireAuth 每次回库核 status
     expect(rows.every((r) => r.status === 'active')).toBe(true)

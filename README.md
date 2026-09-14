@@ -52,7 +52,7 @@ pnpm dev
 | 入口 | 本地地址 | 账号 | 密码 |
 |---|---|---|---|
 | **角色选择页** | `http://localhost:5173/` | — | — |
-| 老人 / 家属端 | `http://localhost:5173/patient` | `chen` | `123456` |
+| 老人 / 家属端 | `http://localhost:5173/patient` | `liying` | `123456` |
 | 康复师端 | `http://localhost:5173/therapist` | `zhou` | `123456` |
 
 根路径 `/` 是角色选择页，两个入口各一张卡片。

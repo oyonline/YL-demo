@@ -22,7 +22,7 @@ interface Props {
  * `pnpm build` 的产物里不含账号密码，`pnpm dev` 仍然免手输。
  */
 const DEV_PREFILL: Record<Role, { username: string; password: string }> = {
-  family: { username: 'chen', password: '123456' },
+  family: { username: 'liying', password: '123456' },
   therapist: { username: 'zhou', password: '123456' },
 }
 

@@ -58,7 +58,7 @@ const seed = db.transaction(() => {
   // 演示口令沿用 123456，但库里存的是 scrypt 哈希，不再是明文常量。
   // 正式部署必须改密 —— 见方案 §3.2。
   const users = [
-    { id: 'u-family-chen', username: 'chen', pw: '123456', role: 'family',
+    { id: 'u-family-chen', username: 'liying', pw: '123456', role: 'family',
       display: '李英女士（女儿）', title: null },
     { id: 'u-family-zhao', username: 'zhao', pw: '123456', role: 'family',
       display: '赵福安爷爷', title: null },

@@ -37,9 +37,9 @@ describe('密码哈希（scrypt）', () => {
 describe('JWT 令牌', () => {
   const claims = {
     sub: 'u-family-chen',
-    username: 'chen',
+    username: 'liying',
     role: 'family' as const,
-    displayName: '陈家属',
+    displayName: '李英女士（女儿）',
   }
 
   it('签发后能原样校验回来', async () => {
@@ -47,7 +47,7 @@ describe('JWT 令牌', () => {
     const back = await verifyToken(token)
     expect(back?.sub).toBe('u-family-chen')
     expect(back?.role).toBe('family')
-    expect(back?.username).toBe('chen')
+    expect(back?.username).toBe('liying')
   })
 
   it('令牌被篡改时返回 null，且不抛异常', async () => {
