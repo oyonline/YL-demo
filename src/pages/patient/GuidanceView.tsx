@@ -28,7 +28,7 @@ export function GuidanceView() {
         <div className="eyebrow">饮食指导</div>
         <h2 className="card-title">按 {patient.diagnosis.stage} 给出的日常建议</h2>
         <p className="card-note" style={{ marginTop: 6 }}>
-          内容取自甲方《饮食与营养指导》知识库文档，结合她的吞咽情况与合并疾病整理；涉及性状调整与用药的部分由康复师确定
+          内容取自甲方《饮食与营养指导》知识库文档，结合她的吞咽情况与合并疾病整理；涉及性状调整与用药的部分由护理员确定
         </p>
       </section>
 

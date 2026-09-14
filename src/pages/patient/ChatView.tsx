@@ -172,7 +172,7 @@ function traceFor(ctx: PromptCtx, q: PresetQA | null, hits: KbHit[] = []): Trace
   const { patient, taskDefs, planConfirmedOn } = ctx
   const steps: TraceStep[] = [
     { label: '读取康复档案', detail: `${patient.name} · ${patient.diagnosis.strokeType} · ${patient.diagnosis.stage}` },
-    { label: '结合康复师确认的计划', detail: `${planConfirmedOn} 制定，含今日 ${taskDefs.length} 项安排` },
+    { label: '结合护理员确认的计划', detail: `${planConfirmedOn} 制定，含今日 ${taskDefs.length} 项安排` },
   ]
   if (hits.length > 0) {
     steps.push({
@@ -182,7 +182,7 @@ function traceFor(ctx: PromptCtx, q: PresetQA | null, hits: KbHit[] = []): Trace
   }
   steps.push({
     label: '按安全边界组织回答',
-    detail: q?.escalateHint ?? '超出可安全回答范围的部分交回康复师',
+    detail: q?.escalateHint ?? '超出可安全回答范围的部分交回护理员',
   })
   return steps
 }
@@ -223,9 +223,9 @@ function buildSystemPrompt(ctx: PromptCtx): string {
 - 风险：${patient.functionStatus.risks.join('；')}
 - 用药：${patient.medications.map((m) => m.name).join('、') || '暂无'}（剂量未确认，不得提及具体剂量）
 
-今日计划（${planConfirmedOn} 由康复师确认）：${plan}
+今日计划（${planConfirmedOn} 由护理员确认）：${plan}
 
-康复师：${therapist.name}（${therapist.title}）
+护理员：${therapist.name}（${therapist.title}）
 
 【输出格式】必须分成两段，标题原样写，不要加编号或其它符号：
 
@@ -240,15 +240,15 @@ ${SRC_TEAM}
 【如实原则 · 最重要】
 - 你没有联网检索能力，第一段只能写你确知的通用科普，**不要暗示是刚刚搜到的**。
 - 若某一段确实没有可靠内容可写，就在该标题下**如实写明没有**，例如
-  「这个问题超出我能提供的科普范围，建议直接咨询${therapist.name}康复师。」
+  「这个问题超出我能提供的科普范围，建议直接咨询${therapist.name}。」
   **绝对不要为了填满格式而编造内容。**
 - 档案里没有的信息（如具体用药剂量、未做过的检查结果）一律不得杜撰。
 
 安全边界（必须遵守）：
 1. 不给出具体药物剂量、不改变食物性状比例、不调整训练强度——均属专业判断
-2. 一律引导"记录 + 观察 + 联系康复师"，而非替代专业决策
+2. 一律引导"记录 + 观察 + 联系护理员"，而非替代专业决策
 3. 每条都带明确的升级条件（出现什么情况必须立即联系/就医）
-4. 涉及康复计划调整、新出现的身体变化，或需要专业评估的情况，明确建议转康复师
+4. 涉及康复计划调整、新出现的身体变化，或需要专业评估的情况，明确建议转护理员
 
 回答风格：
 - 用家属能听懂的话，避免医学术语
@@ -374,7 +374,7 @@ export function ChatView() {
         // 这里直接用真实文档名与出处，不再是写死的两条。
         basis: [
           `${patient.name}的康复档案`,
-          `${planConfirmedOn} 康复师确认计划`,
+          `${planConfirmedOn} 护理员确认计划`,
           ...hitsToBasis(hits),
         ],
         escalated: false,
@@ -451,16 +451,16 @@ export function ChatView() {
       <div className="card-hd">
         <div>
           <div className="eyebrow">智能对话咨询</div>
-          <h2 className="card-title">结合 {patient.name} 的档案作答</h2>
+          <h2 className="card-title">结合王萍奶奶档案作答</h2>
         </div>
-        <span className="card-note">复杂问题会转交 {therapist.name} 康复师</span>
+        <span className="card-note">复杂问题会转交 {therapist.name}</span>
       </div>
 
       <div className="chat-body">
         {messages.length === 0 && (
           <div className="empty-chat">
             <div className="big">有什么想问的？</div>
-            <div>回答会结合她的诊断、当前康复阶段和康复师确认的计划</div>
+            <div>回答会结合她的诊断、当前康复阶段和护理员确认的计划</div>
           </div>
         )}
 
@@ -482,7 +482,7 @@ export function ChatView() {
                 {!isMe && (
                   <div className="bub-who">
                     {isTherapist
-                      ? <><span className="bub-tag bub-tag-th">康复师</span>{therapist.name} · {therapist.title}</>
+                      ? <><span className="bub-tag bub-tag-th">护理员</span>{therapist.name} · {therapist.title}</>
                       : <><span className="bub-tag">AI</span>智能助手 · 依据她的康复档案作答</>}
                   </div>
                 )}
@@ -519,13 +519,13 @@ export function ChatView() {
                   const sent = state.escalations.some((e) => e.question === question)
                   return (
                     <div className="escalate">
-                      <span style={{ flex: 1 }}>{sent ? `已转交 ${therapist.name} 康复师，回复会显示在这里` : hint}</span>
+                      <span style={{ flex: 1 }}>{sent ? `已转交 ${therapist.name}，回复会显示在这里` : hint}</span>
                       {!sent && (
                         <button className="btn" onClick={() => createEscalation({
                           source: 'chat',
                           question,
                           context: m.basis ?? [],
-                        })}>转康复师</button>
+                        })}>转护理员</button>
                       )}
                     </div>
                   )
@@ -617,7 +617,7 @@ export function ChatView() {
           >
             {LLM_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
-          <span className="card-note">复杂问题会转交 {therapist.name} 康复师</span>
+          <span className="card-note">复杂问题会转交 {therapist.name}</span>
         </div>
       </div>
     </section>

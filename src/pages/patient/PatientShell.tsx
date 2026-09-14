@@ -57,7 +57,7 @@ export function PatientShell() {
         <div className="card card-pad" style={{ maxWidth: 420 }}>
           <h2 className="card-title">尚未关联老人档案</h2>
           <p className="card-note" style={{ marginTop: 8 }}>
-            请联系康复师为您的账号关联老人档案后再登录。
+            请联系护理员为您的账号关联老人档案后再登录。
           </p>
         </div>
       </div>
@@ -230,9 +230,9 @@ function PatientShellInner() {
 
 /**
  * 按今日任务的相关度排序：下肢训练→肌力、吞咽操→洼田、
- * 认知训练→MMSE、皮肤检查→Braden。四项正好对上四项训练。
+ * 任务与评估卡按当前档案展示。
  */
-const TILE_ORDER = ['MMT 徒手肌力测试', '洼田饮水试验', 'MMSE 简易智能量表', 'Braden 压疮风险']
+const TILE_ORDER = ['MMT 徒手肌力测试', '洼田饮水试验', 'MMSE 简易智能量表']
 
 function Fact({ k, v, tag }: { k: string; v: string; tag?: string }) {
   return (

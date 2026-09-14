@@ -60,7 +60,7 @@ export function TodayView() {
           </div>
           <div className="hero-sub">
             {!hasPlan
-              ? '康复师制定计划后，今日安排会显示在这里'
+              ? '护理员制定计划后，今日安排会显示在这里'
               : remaining === 0
               ? '坚持得很好，明天继续保持'
               : next
@@ -84,7 +84,7 @@ export function TodayView() {
             <article className="msg" key={g.id}>
               <span className="msg-avatar">{g.therapistName[0]}</span>
               <div>
-                <div className="msg-who">{g.therapistName} 康复师</div>
+                <div className="msg-who">{g.therapistName}</div>
                 <Lines className="msg-body" text={g.text} />
                 <div className="msg-time">
                   {new Date(g.at).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
@@ -94,7 +94,7 @@ export function TodayView() {
           ))}
           {guidances.length > 1 && (
             <button className="msg-more" onClick={() => setShowAllMsgs(!showAllMsgs)}>
-              {showAllMsgs ? '收起早前留言' : `还有 ${guidances.length - 1} 条康复师留言`}
+              {showAllMsgs ? '收起早前留言' : `还有 ${guidances.length - 1} 条护理员留言`}
             </button>
           )}
         </div>
@@ -104,7 +104,7 @@ export function TodayView() {
         <div className="card-hd">
           <div>
             <div className="eyebrow">今日安排</div>
-            <h2 className="card-title">{hasPlan ? '按康复师制定的计划执行' : '尚未制定康复计划'}</h2>
+            <h2 className="card-title">{hasPlan ? '按护理员制定的计划执行' : '尚未制定康复计划'}</h2>
           </div>
           <span style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             <Link to="/patient/videos" className="card-note" style={{ color: 'var(--green-700)', fontWeight: 550 }}>
@@ -118,7 +118,7 @@ export function TodayView() {
           {!hasPlan && (
             <div className="empty-chat">
               <div className="big">暂无今日安排</div>
-              <div>康复师完成评估并制定计划后，训练和提醒会自动出现在这里。</div>
+              <div>护理员完成评估并制定计划后，训练和提醒会自动出现在这里。</div>
             </div>
           )}
           {rows.map(({ task, checkIn, status }) => {
@@ -154,7 +154,7 @@ export function TodayView() {
                     </div>
                     {status === 'difficulty' && checkIn?.note && (
                       <div className="tl-desc" style={{ marginTop: 6, color: 'var(--wait)' }}>
-                        已反馈：{checkIn.note} · 等待 {therapist.name} 康复师回复
+                        已反馈：{checkIn.note} · 等待 {therapist.name} 回复
                       </div>
                     )}
                   </div>
@@ -194,7 +194,7 @@ export function TodayView() {
 
                 {troubleFor === task.id && (
                   <div className="trouble">
-                    <div className="trouble-t">遇到什么困难？会连同她的档案一起转给 {therapist.name} 康复师</div>
+                    <div className="trouble-t">遇到什么困难？会连同她的档案一起转给 {therapist.name}</div>
                     <textarea
                       className="ta" rows={2} value={note} autoFocus
                       onChange={(e) => setNote(e.target.value)}
@@ -203,7 +203,7 @@ export function TodayView() {
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
                       <button className="btn-quiet" onClick={() => setTroubleFor(null)}>取消</button>
                       <button className="btn" disabled={!note.trim()} onClick={() => submitTrouble(task.id, task.title)}>
-                        提交给康复师
+                        提交给护理员
                       </button>
                     </div>
                   </div>
@@ -216,7 +216,7 @@ export function TodayView() {
         <div className="safety">
           <span className="safety-i"><IconShield size={15} /></span>
           <span style={{ flex: 1 }}>
-            如出现头晕、胸闷、恶心、呛咳加重等不适，请立即停止训练并联系康复师或就医。
+            如出现头晕、胸闷、恶心、呛咳加重等不适，请立即停止训练并联系护理员或就医。
           </span>
           <span className="safety-tel">服务电话 {SUPPORT_PHONE}</span>
         </div>

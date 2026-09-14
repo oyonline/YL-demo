@@ -1,7 +1,7 @@
 /**
  * 种子灌入 —— 把 src/data/ 里的演示数据搬进数据库。
  *
- * 林奶奶保留完整演示数据；赵福安爷爷按 2026-09-03 用户裁决仅预置
+ * 王萍奶奶保留完整演示数据；赵福安爷爷按 2026-09-03 用户裁决仅预置
  * 最小建档记录，不预置诊断、评估、用药、康复计划或执行历史。
  *
  * 幂等：每次运行先清空业务表（包括演示审计日志）再重灌，便于反复排练。
@@ -59,7 +59,7 @@ const seed = db.transaction(() => {
   // 正式部署必须改密 —— 见方案 §3.2。
   const users = [
     { id: 'u-family-chen', username: 'chen', pw: '123456', role: 'family',
-      display: '陈女士（女儿）', title: null },
+      display: '李英女士（女儿）', title: null },
     { id: 'u-family-zhao', username: 'zhao', pw: '123456', role: 'family',
       display: '赵福安爷爷', title: null },
     { id: 'u-th-zhou', username: 'zhou', pw: '123456', role: 'therapist',
@@ -148,7 +148,7 @@ const seed = db.transaction(() => {
       a.tile?.label ?? null, a.tile?.value ?? null, a.tile?.note ?? null,
       a.date, a.assessor, a.note, a.visibleToFamily ? 1 : 0, i))
 
-  // admission 于 2026-08-30 改为可选（新建档案本来就没有）；种子里林奶奶有，
+  // admission 为可选；新资料未提供住院记录时不写入。
   // 但类型上必须显式判空，否则改动契约后这里会静默取到 undefined
   const ad = p.admission
   if (ad) db.prepare(`INSERT INTO admissions

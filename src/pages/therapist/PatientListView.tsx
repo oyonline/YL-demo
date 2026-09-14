@@ -132,7 +132,7 @@ export function PatientListView() {
                 <td style={{ textAlign: 'right' }}>
                   {r.canOpen
                     ? <Link className="btn-quiet" to={`/therapist/patients/${r.id}`}><IconUser size={13} /> 查看详情</Link>
-                    : <span style={{ color: 'var(--ink-4)', fontSize: 'var(--t-xs)' }}>另一位康复师主责</span>}
+                    : <span style={{ color: 'var(--ink-4)', fontSize: 'var(--t-xs)' }}>另一位护理员主责</span>}
                 </td>
               </tr>
               )

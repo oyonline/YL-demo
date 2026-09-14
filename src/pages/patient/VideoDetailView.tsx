@@ -55,7 +55,7 @@ export function VideoDetailView() {
           <span style={{ flex: 'none', marginTop: 2 }}><IconAlert size={15} /></span>
           <span>
             {video.cautions?.length ? `${video.cautions.join('；')}。` : ''}
-            有任何不适立即停止，并告诉 {therapist.name} 康复师。
+            有任何不适立即停止，并告诉 {therapist.name}。
           </span>
         </div>
       </section>
@@ -97,15 +97,15 @@ export function VideoDetailView() {
               </button>
             )}
             {task.requiresVideoUpload && !upload && (
-              <button className="btn-quiet" onClick={() => setShowUpload(true)}>回传训练视频给康复师</button>
+              <button className="btn-quiet" onClick={() => setShowUpload(true)}>回传训练视频给护理员</button>
             )}
           </div>
 
           {task.requiresVideoUpload && (
             <p className="card-note" style={{ marginTop: 12 }}>
               {upload
-                ? `已回传 ${upload.filename}，${therapist.name} 康复师可以在工作台看到`
-                : '回传后康复师能看到她实际做的情况，便于下次调整训练'}
+                ? `已回传 ${upload.filename}，${therapist.name} 可以在工作台看到`
+                : '回传后护理员能看到她实际做的情况，便于下次调整训练'}
             </p>
           )}
 

@@ -49,7 +49,7 @@ export function GuidanceDetailView() {
         )}
 
         <p className="card-note" style={{ marginTop: 18 }}>
-          有拿不准的地方，随时问 {therapist.name} 康复师。
+          有拿不准的地方，随时问 {therapist.name}。
         </p>
       </section>
 

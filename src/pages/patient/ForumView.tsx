@@ -21,7 +21,7 @@ export function ForumView() {
         <div className="eyebrow">家属互助论坛</div>
         <h2 className="card-title">家属互助 + 专业支持</h2>
         <p className="card-note" style={{ marginTop: 6 }}>
-          分享照护经验、交流康复心得、互相鼓励。康复师团队在群内定期答疑、发布每周话题
+          分享照护经验、交流康复心得、互相鼓励。护理员团队在群内定期答疑、发布每周话题
         </p>
       </section>
 

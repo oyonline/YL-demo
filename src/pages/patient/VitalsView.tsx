@@ -59,7 +59,7 @@ export function VitalsView() {
         <div className="card-hd">
           <div>
             <div className="eyebrow">健康数据</div>
-            <h2 className="card-title">记录 {patient.name} 的血压</h2>
+            <h2 className="card-title">记录 {patient.name} 血压</h2>
           </div>
           <span className="card-note">安全范围 {BP_SAFE.sysMin}–{BP_SAFE.sysMax} / {BP_SAFE.diaMin}–{BP_SAFE.diaMax} mmHg</span>
         </div>
@@ -75,12 +75,12 @@ export function VitalsView() {
             <input className="input num" inputMode="numeric" value={dia} onChange={(e) => setDia(e.target.value.replace(/\D/g, ''))} />
           </label>
           <span className="bp-unit">mmHg</span>
-          <button className="btn btn-lg" onClick={submit} data-done={justSaved}><IconCheck size={13} /> {justSaved ? '已记录' : '记录'}</button>
+          <button className="btn btn-lg" onClick={submit} data-done={justSaved}><IconCheck size={13} /> {justSaved ? '已记录' : records.length === 0 ? '开始今日测量' : '记录'}</button>
         </div>
         {err && <p className="card-note" style={{ color: 'var(--miss)', marginTop: 10 }}>{err}</p>}
 
         <p className="card-note" style={{ marginTop: 12 }}>
-          测前安静休息 5 分钟，坐位、手臂与心脏同高。测完点「记录」，{therapist.name} 康复师那边会同步看到。
+          测前安静休息 5 分钟，坐位、手臂与心脏同高。测完点「记录」，{therapist.name} 那边会同步看到。
         </p>
       </section>
 
@@ -92,8 +92,8 @@ export function VitalsView() {
           <ul className="alert-list">
             <li>安全范围是 {BP_SAFE.sysMin}–{BP_SAFE.sysMax} / {BP_SAFE.diaMin}–{BP_SAFE.diaMax} mmHg。</li>
             <li>请让她<strong>安静休息 5–10 分钟后再测一次</strong>，两次数值都记下来。</li>
-            <li><strong>不要自行加药或调整剂量</strong>——用法用量须由医师或康复师决定。</li>
-            <li>已同步给 {therapist.name} 康复师，她会在工作台看到这条记录。</li>
+            <li><strong>不要自行加药或调整剂量</strong>——用法用量须由医师或护理员决定。</li>
+            <li>已同步给 {therapist.name}，她会在工作台看到这条记录。</li>
           </ul>
           <div className="alert-emg">
             出现剧烈头痛、视物模糊、胸闷、恶心呕吐，或一侧肢体较平时明显无力，<strong>不要等待，立即就医</strong>。
@@ -117,6 +117,7 @@ export function VitalsView() {
       <section className="card card-pad">
         <div className="eyebrow">记录明细</div>
         <div className="bp-rows">
+          {records.length === 0 && <div className="card-note" style={{ padding: '18px 0' }}>暂无</div>}
           {[...records].reverse().slice(0, 10).map((r, i) => {
             const bad = isBpAbnormal(r)
             return (

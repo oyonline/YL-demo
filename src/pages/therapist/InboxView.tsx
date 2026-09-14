@@ -55,7 +55,7 @@ export function InboxView() {
         {pending.length === 0 ? (
           <div className="empty-chat">
             <div className="big">暂无待处理咨询</div>
-            <div>家属在对话里点「转康复师」，或在任务上反馈困难，都会出现在这里</div>
+            <div>家属在对话里点「转护理员」，或在任务上反馈困难，都会出现在这里</div>
           </div>
         ) : (
           <div className="stack" style={{ gap: 14 }}>

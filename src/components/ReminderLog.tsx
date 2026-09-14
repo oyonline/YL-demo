@@ -80,7 +80,7 @@ export function ReminderLog({ items }: { items: ReminderItem[] }) {
         <span className="card-note num">已推送 {sentCount} / {items.length}</span>
       </div>
       <p className="card-note" style={{ padding: '0 20px 4px' }}>
-        按康复师计划的时间点自动推送，不用自己记
+        按护理员计划的时间点自动推送，不用自己记
       </p>
 
       <div className="rmlist">

@@ -28,7 +28,7 @@ export default function App() {
               subtitle="居家康复智能助手 · 老人／家属登录"
               home="/patient"
               skin="warm"
-              hint="忘记密码请联系您的康复师"
+              hint="忘记密码请联系您的护理员"
             />
           }
         />
@@ -47,7 +47,7 @@ export default function App() {
             <LoginPage
               role="therapist"
               title="银康安馨"
-              subtitle="康复师工作台 · 远程随访与指导"
+              subtitle="护理员工作台 · 远程随访与指导"
               home="/therapist"
               skin="cool"
               hint="账号由所在机构统一分配"

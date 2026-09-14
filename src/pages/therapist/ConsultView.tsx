@@ -29,7 +29,7 @@ export function ConsultView() {
         {pending.length === 0 ? (
           <div className="empty-chat">
             <div className="big">暂无待处理咨询</div>
-            <div>家属在对话里点「转康复师」，或在任务上反馈困难，都会出现在这里</div>
+            <div>家属在对话里点「转护理员」，或在任务上反馈困难，都会出现在这里</div>
           </div>
         ) : (
           <div className="stack" style={{ gap: 14 }}>
@@ -66,7 +66,7 @@ export function ConsultView() {
                       {isFamily
                         ? patient.caregiver.name
                         : m.role === 'therapist'
-                          ? <><span className="bub-tag bub-tag-th">康复师</span>{therapist.name}</>
+                          ? <><span className="bub-tag bub-tag-th">护理员</span>{therapist.name}</>
                           : <><span className="bub-tag">AI</span>智能助手</>}
                       {' · '}
                       {new Date(m.at).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}

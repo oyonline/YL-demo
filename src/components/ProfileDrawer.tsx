@@ -69,7 +69,7 @@ export function ProfileDrawer({ open, onClose, audience }: { open: boolean; onCl
           <span>
             <div style={{ fontSize: 'var(--t-md)', fontWeight: 650 }}>{patient.name} · 康复档案</div>
             <div style={{ fontSize: 'var(--t-xs)', color: 'var(--ink-3)' }}>
-              {[createdOn && `建档 ${createdOn}`, therapist.name && `责任康复师 ${therapist.name}${therapist.title ? ` · ${therapist.title}` : ''}`].filter(Boolean).join(' · ')}
+              {[createdOn && `建档 ${createdOn}`, therapist.name && `责任护理员 ${therapist.name}${therapist.title ? ` · ${therapist.title}` : ''}`].filter(Boolean).join(' · ')}
             </div>
           </span>
           <button className="drawer-close" onClick={onClose} aria-label="关闭"><IconClose /></button>
@@ -188,7 +188,7 @@ export function ProfileDrawer({ open, onClose, audience }: { open: boolean; onCl
           <section className="sec">
             <div className="sec-t">评估记录</div>
             <div className="sec-d">
-              由康复师现场评估后录入，系统不代为判定
+              由护理员现场评估后录入，系统不代为判定
               {audience === 'family' && patient.assessments.length > assessments.length &&
                 ` · 另有 ${patient.assessments.length - assessments.length} 项供康复团队内部参考`}
             </div>
@@ -220,7 +220,7 @@ export function ProfileDrawer({ open, onClose, audience }: { open: boolean; onCl
             <div className="sec-t">用药与既往史</div>
             <div className="sec-d">
               {patient.medications.length || patient.pastHistory.length
-                ? '用法用量以康复师／医师医嘱为准' : '尚未录入'}
+                ? '用法用量以护理员／医师医嘱为准' : '尚未录入'}
             </div>
             <ul className="olist">
               {patient.medications.map((m) => (
@@ -244,7 +244,7 @@ export function ProfileDrawer({ open, onClose, audience }: { open: boolean; onCl
             <div className="sec-t">本阶段康复目标</div>
             <div className="sec-d">
               {patient.goals.shortTerm.length
-                ? <>由 {therapist.name} 康复师制定{patient.goals.nextReviewDate && ` · 下次复评 ${patient.goals.nextReviewDate}`}</>
+                ? <>由 {therapist.name} 制定{patient.goals.nextReviewDate && ` · 下次复评 ${patient.goals.nextReviewDate}`}</>
                 : '尚未录入'}
             </div>
             <ul className="olist">

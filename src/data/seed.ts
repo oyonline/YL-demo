@@ -1,11 +1,8 @@
 /**
  * 演示数据 —— 演示病例，不对应任何真实个人。
  *
- * 2026-08-29 换病例：由合成的「陈桂芳」换为甲方交付的「林奶奶」。
- *
- * 四张量表不再是 '待专业确认' —— MMSE 18 / 洼田Ⅱ / MMT 左4右5 / Braden 16
- * 全部来自甲方《林奶奶_康复评估量表汇总》（评估日 2026-07-07，评估人：
- * 康复师小婷、小周，康复护士小彭），由其专业团队实测并署名，本项目未生成任何分值。
+ * 2026-09-12 按用户确认的新资料换为「王萍奶奶」。
+ * MMT、MMSE 与洼田分级均直接来自该资料，本项目未生成分值。
  *
  * 仍然守住的边界：
  * - 用药剂量甲方同样未给（其模板原文只写「吃降压药（如果医生有开药）」），
@@ -25,36 +22,33 @@ export const SUPPORT_PHONE = '400-000-0000'
 
 export const patient: Patient = {
   id: PATIENT_ID,
-  name: '林奶奶',
+  name: '王萍奶奶',
   avatar: '',
-  ageBand: '82 岁',
+  ageBand: '78 岁',
   gender: '女',
   // SYNTHETIC：甲方评估表未提供身高体重
   heightCm: 156,
   weightKg: 48,
   livingSituation: '与女儿同住，日间主要由女儿照护',
-  caregiver: { name: '陈女士', relation: '女儿' },
+  caregiver: { name: '李英女士', relation: '女儿' },
   diagnosis: {
-    strokeType: '脑梗死后遗症（病程 2 年）',
-    // SYNTHETIC：甲方只给「病程 2 年」，未给确切发病日，此处按评估日回推
-    onsetDate: '2024-07-07',
-    stage: '居家康复·准备期（第 1 周）',
-    comorbidities: ['高血压 5 年', '长期失眠'],
+    strokeType: '脑梗死后遗症（病程 1 个月）',
+    // SYNTHETIC：新资料未给确切发病日，此处仅供日期字段占位
+    onsetDate: '2026-08-12',
+    stage: '准备期（第 1 周）',
+    comorbidities: ['高血压 20 年', '左侧肢体活动不利'],
   },
   functionStatus: {
-    affectedSide: '左侧偏瘫',
-    mobility: '左侧肌力 MMT 4 级、右侧 5 级；左踝周肌张力 Ashworth 1+ 级，足背屈不充分，行走呈尖足模式（脚尖先着地），步态不稳、害怕跌倒，转移与步行全程须有人保护',
-    swallowing: '洼田饮水试验 Ⅱ 级：30ml 温水可全部咽下但需分两次，存在可疑误吸风险；食物宜从糊状起步、小口慢咽、端坐位进食',
-    cognition: 'MMSE 18 分（中度认知障碍）：时间与地点定向力欠缺、短期记忆较弱、三步指令执行不完整；计算力与即刻记忆保留较好',
+    affectedSide: '左侧肢体活动不利',
+    mobility: '左上肢肌力 MMT 4 级、左下肢 3 级，右侧良好；存在步态失衡，转移与步行全程须有人保护',
+    swallowing: '洼田饮水试验 Ⅱ 级；当前按鼻饲流质饮食照护，鼻饲时抬高床头，结束后保持体位 30～60 分钟',
+    cognition: 'MMSE 27 分，认知正常',
     risks: [
-      '跌倒风险（尖足步态、害怕跌倒）',
+      '跌倒风险（步态失衡）',
       '误吸风险（洼田 Ⅱ 级）',
-      '压疮风险（Braden 16 分 · 轻度危险）',
-      '情绪低落、抗拒照护，需心理支持',
+      '鼻饲照护（流质饮食）',
     ],
   },
-  psychosocial:
-    '情绪低落、抗拒照护，有消极言语「你让我死了算了」。团队意见：需心理疏导 + 家属支持。（2026-07-07 入户评估记录）',
   medications: [
     {
       id: 'm-01',
@@ -71,111 +65,72 @@ export const patient: Patient = {
       value: 'Ⅱ 级',
       level: '可疑误吸（阳性）',
       tile: { label: '洼田饮水', value: 'Ⅱ 级', note: '可疑误吸' },
-      date: '2026-07-07',
-      assessor: '康复师小周',
+      date: '2026-09-12',
+      assessor: '专业团队',
       note: '30ml 温水可全部喝完但需分两次咽下。建议进行吞咽功能训练，食物从糊状开始逐步过渡，小口慢咽，进食保持端坐位。',
       visibleToFamily: true,
     },
     {
       name: 'MMT 徒手肌力测试',
-      value: '左侧 4 级 / 右侧 5 级',
-      level: '左侧良好，可抗重力及部分阻力',
-      tile: { label: '肌力 MMT', value: '左 4 · 右 5', note: '左侧良好' },
-      date: '2026-07-07',
-      assessor: '康复师小婷',
-      note: '左踝背屈、跖屈、内翻、外翻均为 Ashworth 1+ 级（轻度增高），导致足背屈不充分、呈尖足步态。康复重点：训练左下肢肌力、降低踝周肌张力、矫正尖足步态、预防跌倒。',
+      value: '左上肢 4 级 / 左下肢 3 级 / 右侧良好',
+      level: '左侧肢体活动不利',
+      tile: { label: '肌力 MMT', value: '左上 4 · 左下 3', note: '右侧良好' },
+      date: '2026-09-12',
+      assessor: '专业团队',
+      note: '左上肢肌力 4 级、左下肢肌力 3 级，右侧良好。',
       visibleToFamily: true,
     },
     {
       name: 'MMSE 简易智能量表',
-      value: '18 分',
-      level: '中度认知障碍',
-      tile: { label: 'MMSE', value: '18 分', note: '中度认知障碍' },
-      date: '2026-07-07',
+      value: '27 分',
+      level: '认知正常',
+      tile: { label: 'MMSE', value: '27 分', note: '认知正常' },
+      date: '2026-09-12',
       assessor: '康复团队',
-      note: '满分 30 分。主要受损：时间／地点定向力欠缺、短期记忆较弱、执行能力不足；计算力与即刻记忆保留较好。',
-      visibleToFamily: true,
-    },
-    {
-      name: 'Braden 压疮风险',
-      value: '16 分',
-      level: '轻度危险（15–18 分）',
-      tile: { label: 'Braden', value: '16 分', note: '轻度危险' },
-      date: '2026-07-07',
-      assessor: '康复护士小彭',
-      note: '风险来自左侧偏瘫致活动能力下降、转移时摩擦剪切力、偏瘫侧感觉减退。预防：每 2 小时协助翻身，重点检查骶尾部、足跟、外踝，转移时避免拖拽。',
+      note: '满分 30 分，本次评估 27 分，认知正常。',
       visibleToFamily: true,
     },
   ],
   goals: {
-    // 甲方《林奶奶个体化康复训练计划表》短期目标（1 周内）
     shortTerm: [
-      '下肢能进行抗阻训练，不出现明显疲劳',
-      '认知训练能完成三步指令',
-      '吞咽训练能主动配合完成整套操',
-      '家属能独立完成血压测量和记录',
+      '按计划完成吞咽训练与肢体训练',
+      '家属能按流程完成鼻饲照护',
+      '家属能完成早晚血压测量和记录',
     ],
     // SYNTHETIC：甲方长期目标写「1 个月后」，未给具体复评日，按计划制定日推算
-    nextReviewDate: '2026-09-27',
+    nextReviewDate: '2026-10-27',
   },
 
-  // SYNTHETIC：急性期住院经过甲方未提供，为档案完整性虚构，与「病程 2 年」保持一致
-  admission: {
-    admittedOn: '2024-07-07',
-    dischargedOn: '2024-07-21',
-    facility: '三级综合医院',
-    department: '神经内科',
-    chiefComplaint: '突发左侧肢体无力伴行走不稳',
-    admissionDiagnosis: ['急性脑梗死', '高血压'],
-    course: '入院后予规范内科治疗，血压控制平稳；病情稳定后康复科会诊介入，床旁开始良肢位摆放与被动关节活动。',
-    dischargeStatus: '神志清楚，生命体征平稳。左侧肢体活动较入院改善，仍需辅助转移。',
-    dischargeOrders: [
-      '继续口服降压药物，定期监测血压',
-      '转居家康复，由康复师制定并调整训练计划',
-      '进食注意食物性状调整，警惕误吸',
-      '如出现新发无力、意识改变立即就医',
-    ],
-  },
-
-  // 前两条为 SYNTHETIC（甲方未提供急性期记录）—— 标记只能写在注释里。
-  // v0.2 §6.1：演示画面不得出现「演示／合成／占位」字样，
-  // 这两条 detail 里原先带着括号标注，会直接渲染到时间线上。
   careEvents: [
-    { date: '2024-07-07', kind: 'admission', title: '发病入院', detail: '突发左侧肢体无力伴行走不稳，收入神经内科。' },
-    { date: '2024-07-21', kind: 'discharge', title: '出院', detail: '病情稳定出院，左侧肢体仍遗留功能障碍，转门诊与居家康复。' },
-    { date: '2026-07-07', kind: 'assessment', title: '居家康复首次入户评估', detail: '康复师小婷、小周与康复护士小彭上门，完成 MMSE、洼田饮水试验、MMT 与 Braden 四项评估，并记录睡眠、心理与饮食情况。' },
-    { date: '2026-08-27', kind: 'homecare', title: '个体化康复训练计划制定', detail: '银康安馨居家康复服务团队据评估结果制定三阶段训练方案：准备期放松降张力、强化期抗阻、步态实用期矫正尖足。' },
-    { date: '2026-09-27', kind: 'upcoming', title: '下次复评', detail: '评估左下肢肌力、MMSE 与洼田分级改善情况，据此调整下一阶段计划。' },
+    { date: '2026-09-12', kind: 'assessment', title: '照护评估', detail: '完成 MMT、MMSE 与洼田饮水试验评估。' },
+    { date: '2026-09-12', kind: 'homecare', title: '准备期照护计划制定', detail: '根据王萍奶奶档案制定准备期第一周照护与训练计划。' },
+    { date: '2026-10-27', kind: 'upcoming', title: '下次复评', detail: '复评左侧肢体功能、认知与吞咽情况，并据此调整下一阶段计划。' },
   ],
 
   // SYNTHETIC：联系电话甲方未提供，此处为脱敏占位
-  emergencyContact: { name: '陈女士', relation: '女儿', phoneMasked: '138****6721' },
-  assistiveDevices: ['助行器（室内步行）', '床边护栏', '卫生间扶手与地面防滑垫'],
-  communication: '意识清楚，可配合指令；时间与地点定向力欠缺、短期记忆较弱，需放慢语速、给足反应时间，必要时重复提示。',
-  pastHistory: ['高血压 5 年', '长期失眠：入睡困难、睡眠片段化', '脑梗死后遗症，病程 2 年', '饮食口味偏重、爱吃肥肉、不爱吃水果'],
+  emergencyContact: { name: '李英女士', relation: '女儿', phoneMasked: '138****6721' },
+  assistiveDevices: ['外骨骼助行设备', '床边护栏'],
+  communication: '意识清楚，MMSE 27 分，认知正常，可配合指令。',
+  pastHistory: ['高血压 20 年', '脑梗死后遗症，病程 1 个月', '左侧肢体活动不利'],
 
   origin: 'synthetic',
 }
 
 /** 康复师确认训练计划的日期 —— 依据展示引用它，不要再借用某张量表的日期 */
-export const PLAN_CONFIRMED_ON: ISODate = '2026-08-27'
+export const PLAN_CONFIRMED_ON: ISODate = '2026-09-12'
 
 /**
- * 主责康复师。甲方《个体化康复训练计划表》「康复团队分工」：
- * 小婷 = 康复师（统筹），负责全局统筹、下肢康复训练、VR 认知训练；
- * 小周 = 康复师，负责吞咽功能训练与头部推拿；
- * 小彭 = 康复护士，负责生命体征与血压监测、皮肤护理、家属带教。
- * 康复师端登录的是统筹这位。
+ * 主责护理员。
  */
 export const therapist: Therapist = {
   id: 't-001',
-  name: '小婷',
-  title: '康复师（统筹）',
+  name: '康康',
+  title: '资深护理员',
 }
 
 /**
  * 今日任务模板 —— 取自甲方《银康安馨·扣子智能体演示流程与内容脚本》环节四的
- * 任务时间线，并与《林奶奶_每日任务推送模板》《个体化康复训练计划表》对齐。
+ * 任务时间线，与王萍奶奶资料对齐。
  * 训练项目为「准备期（第 1 周）」方案。
  */
 const RAW_TASKS: TaskDef[] = [
@@ -185,8 +140,8 @@ const RAW_TASKS: TaskDef[] = [
     kind: 'record',
     title: '晨起测血压',
     scheduledTime: '07:00',
-    instruction: '先做起床三部曲：躺 30 秒、坐起 30 秒、双脚放床边 30 秒，再站起来。坐位安静休息片刻后测血压并记录。',
-    cautions: ['起身务必分三步，防体位性低血压跌倒', '正常范围 90–139 / 60–89 mmHg，超出请复测一次再反馈'],
+    instruction: '安静休息后测量血压并记录。',
+    cautions: ['注意步态失衡，移动时全程有人保护', '正常范围 90–139 / 60–89 mmHg，超出请复测一次再反馈'],
     origin: 'therapist_confirmed',
   },
   {
@@ -195,70 +150,67 @@ const RAW_TASKS: TaskDef[] = [
     kind: 'medication',
     title: '服用降压药',
     scheduledTime: '07:30',
-    instruction: '早餐后温水送服，服药后静坐 10 分钟。',
-    cautions: ['漏服不可自行补服双倍剂量', '如有头晕请记录并告知康复师', '药名与剂量以医师医嘱为准'],
+    instruction: '按医嘱服用降压药。',
+    cautions: ['漏服不可自行补服双倍剂量', '如有头晕请记录并告知护理员', '药名与剂量以医师医嘱为准'],
     origin: 'therapist_confirmed',
   },
   {
     id: 'task-lower-limb',
     patientId: PATIENT_ID,
     kind: 'training',
-    title: '下肢康复训练（准备期）',
-    scheduledTime: '08:30',
-    instruction: '踝关节被动活动每方向 10 次；脚踝顺、逆时针各环绕 3 圈；脚趾屈伸 10 次；左下肢大腿前后侧与小腿肌群轻柔按摩每处 2–3 分钟。',
-    cautions: ['力度以有酸胀感为宜，不产生疼痛', '全程须有人在旁保护', '头晕或明显疲劳立即停止'],
-    videoId: 'v-balance',
-    reps: '每方向 10 次 + 环绕各 3 圈 + 按摩 2–3 分钟',
-    durationMin: 15,
+    title: '吞咽训练',
+    scheduledTime: '08:00',
+    instruction: '按页面分步说明完成吞咽训练。',
+    cautions: ['全程须有照护人在旁', '出现明显不适立即停止并联系专业人员'],
+    videoId: 'v-swallow',
+    reps: '按计划完成',
+    durationMin: 10,
     origin: 'therapist_confirmed',
   },
   {
     id: 'task-swallow',
     patientId: PATIENT_ID,
     kind: 'training',
-    title: '吞咽康复操',
-    scheduledTime: '09:30',
-    instruction: '深呼吸 3 次 → 张口闭口 5 次 → 嘟嘴咧嘴各 3 次 → 舌肌训练 → 发「咿」音 3 遍，全程端坐位。',
-    cautions: ['每天早晚各一次，每次约 5 分钟', '感冒或精神不好时暂停', '明显呛咳立即停止并联系康复师'],
-    videoId: 'v-swallow',
-    reps: '整套一遍',
-    durationMin: 5,
-    requiresVideoUpload: true,
+    title: '鼻饲喂食',
+    scheduledTime: '08:30',
+    instruction: '按资料中的 3-1-3 检查法与鼻饲流程执行：抬高床头、抽吸胃液、温水润管、鼻饲喂食、清洗胃管，结束后保持体位 30～60 分钟。',
+    cautions: ['鼻饲时抬高床头 30～45°', '出现腹胀或腹泻立即停止并联系专业人员'],
+    reps: '按鼻饲流程完成',
     origin: 'therapist_confirmed',
   },
   {
     id: 'task-cognition',
     patientId: PATIENT_ID,
     kind: 'training',
-    title: 'VR 认知训练',
-    scheduledTime: '15:00',
-    instruction: '时间定向力练习：今年是哪一年、现在什么季节、住几楼；再做三步指令——拿起纸 → 对折 → 放在腿上。不便戴设备时改为看老照片、听熟悉的歌曲。',
-    cautions: ['每次 15–20 分钟即可', '戴设备前先问有没有头晕，做完确认无不适'],
-    reps: '定向力问答 + 三步指令',
-    durationMin: 20,
+    title: '外骨骼助力行走',
+    scheduledTime: '16:00',
+    instruction: '先完成平衡能力测试，再在护理员指导下完成外骨骼助力行走四步指令。资料未提供四步明细，请勿自行编排动作。',
+    cautions: ['全程须有照护人在旁保护', '步态不稳或出现不适立即停止'],
+    reps: '平衡能力测试 + 四步指令',
+    durationMin: 15,
     origin: 'therapist_confirmed',
   },
   {
     id: 'task-skin',
     patientId: PATIENT_ID,
-    kind: 'record',
-    title: '皮肤检查与翻身',
-    scheduledTime: '16:30',
-    instruction: '请女儿协助查看骶尾部、足跟、外踝有无发红；久坐每 1–2 小时变换一次体位。',
-    cautions: ['Braden 16 分属轻度危险，偏瘫侧感觉减退，须由家属代为检查', '发红且按压不褪色请拍照告知康复师'],
-    videoId: 'v-transfer',
-    reps: '三处骨突检查 + 翻身 1 次',
-    durationMin: 6,
+    kind: 'training',
+    title: '音乐律动操',
+    scheduledTime: '17:00',
+    instruction: '充分热身后，跟随音乐完成律动训练。',
+    cautions: ['建议时长 10 分钟', '出现头晕、疼痛或明显疲劳立即停止'],
+    videoId: 'v-drum',
+    reps: '充分热身后完成',
+    durationMin: 10,
     origin: 'therapist_confirmed',
   },
   {
     id: 'task-vitals-night',
     patientId: PATIENT_ID,
     kind: 'record',
-    title: '睡前测血压 + 头部按摩',
+    title: '睡前测量血压',
     scheduledTime: '20:30',
-    instruction: '睡前测一次血压并记录；由女儿按揉太阳穴 20 次、开天门 20 次，温水泡脚 10 分钟。',
-    cautions: ['泡脚水温请家属先试，避免烫伤', '推拿或泡脚后注意保暖，不要吹风'],
+    instruction: '睡前安静休息后测量血压并记录。',
+    cautions: ['不要自行调整药物或剂量', '数值异常时按页面提示复测并联系专业人员'],
     origin: 'therapist_confirmed',
   },
 ]
@@ -282,7 +234,7 @@ export const TODAY_TASK_COUNT = taskDefs.length
  * 其余仅呈现服务规模，不可点开 —— 不为演示编造第二份病例。
  */
 export const roster: RosterEntry[] = [
-  { id: PATIENT_ID, name: '林奶奶', gender: '女', ageBand: '82 岁', stage: '居家康复·准备期', todayDone: 0, todayTotal: TODAY_TASK_COUNT },
+  { id: PATIENT_ID, name: '王萍奶奶', gender: '女', ageBand: '78 岁', stage: '准备期（第 1 周）', todayDone: 0, todayTotal: TODAY_TASK_COUNT },
   { id: 'p-002', name: '周德海', gender: '男', ageBand: '78 岁', stage: '居家康复第 2 阶段', todayDone: 3, todayTotal: 3 },
   { id: 'p-003', name: '孙玉兰', gender: '女', ageBand: '81 岁', stage: '居家康复第 4 阶段', todayDone: 2, todayTotal: 4, flag: '连续 2 天未完成' },
   { id: 'p-004', name: '马长顺', gender: '男', ageBand: '73 岁', stage: '居家康复第 1 阶段', todayDone: 5, todayTotal: 5 },
@@ -309,17 +261,17 @@ export const videos: VideoAsset[] = [
     src: '/videos/v-swallow.mp4',
     target: '洼田饮水试验 Ⅱ 级、舌肌与喉部肌力不足者',
     goal: '激活口颜面与咽喉肌群，改善吞咽启动',
-    cautions: ['每天早晚各一次，每次约 5 分钟', '感冒或精神状态差时暂停', '出现明显呛咳立即停止并联系康复师'],
+    cautions: ['每天早晚各一次，每次约 5 分钟', '感冒或精神状态差时暂停', '出现明显呛咳立即停止并联系护理员'],
     durationSec: 210,
     origin: 'team_reviewed',
   },
   {
     id: 'v-balance',
     title: '下肢康复训练（准备期）',
-    category: '肢体康复类',
+    category: '肢体训练类',
     src: '/videos/v-balance.mp4',
-    target: '左下肢肌力 4 级、踝周肌张力增高的偏瘫老人',
-    goal: '放松左下肢、降低肌张力、维持踝关节活动度',
+    target: '左下肢肌力 3 级、步态失衡的老人',
+    goal: '训练左下肢活动与平衡能力',
     cautions: ['力度以有酸胀感为宜，不产生疼痛', '全程须有人在旁保护', '头晕或明显疲劳立即停止'],
     durationSec: 135,
     origin: 'team_reviewed',
@@ -327,7 +279,7 @@ export const videos: VideoAsset[] = [
   {
     id: 'v-transfer',
     title: '转移训练',
-    category: '肢体康复类',
+    category: '肢体训练类',
     src: '/videos/v-transfer.mp4',
     target: '偏瘫恢复期居家老人',
     goal: '减少照护者腰部负担，降低跌倒与压疮风险',
@@ -337,29 +289,29 @@ export const videos: VideoAsset[] = [
   },
   { id: 'v-feed-water',   title: '喂水技巧',       category: '吞咽康复类',   src: '/videos/v-feed-water.mp4',   durationSec: 61,  origin: 'team_reviewed' },
   { id: 'v-feed-food',    title: '喂食技巧',       category: '吞咽康复类',   src: '/videos/v-feed-food.mp4',    durationSec: 54,  origin: 'team_reviewed' },
-  { id: 'v-joint',        title: '关节活动',       category: '肢体康复类',   src: '/videos/v-joint.mp4',        durationSec: 69,  origin: 'team_reviewed' },
-  { id: 'v-dress',        title: '穿脱衣物',       category: '肢体康复类',   src: '/videos/v-dress.mp4',        durationSec: 109, origin: 'team_reviewed' },
-  { id: 'v-posture',      title: '良肢位摆放',     category: '日常护理类',   src: '/videos/v-posture.mp4',      durationSec: 82,  origin: 'team_reviewed' },
-  { id: 'v-bp',           title: '血压监测',       category: '日常护理类',   src: '/videos/v-bp.mp4',           durationSec: 172, origin: 'team_reviewed' },
-  { id: 'v-walker',       title: '助行器行走',     category: '康复辅具类',   src: '/videos/v-walker.mp4',       durationSec: 171, origin: 'team_reviewed' },
-  { id: 'v-bandage',      title: '康复辅具绷带使用', category: '康复辅具类', src: '/videos/v-bandage.mp4',      durationSec: 82,  origin: 'team_reviewed' },
-  { id: 'v-vr',           title: 'VR 训练',        category: '认知训练类',   src: '/videos/v-vr.mp4',           durationSec: 161, origin: 'team_reviewed' },
-  { id: 'v-attention',    title: '注意力训练',     category: '认知训练类',   src: '/videos/v-attention.mp4',    durationSec: 73,  origin: 'team_reviewed' },
-  { id: 'v-memory',       title: '短时记忆训练',   category: '认知训练类',   src: '/videos/v-memory.mp4',       durationSec: 93,  origin: 'team_reviewed' },
-  { id: 'v-head-massage', title: '头部按摩',       category: '中医适宜技术', src: '/videos/v-head-massage.mp4', durationSec: 307, origin: 'team_reviewed' },
-  { id: 'v-acupoint',     title: '穴位按摩',       category: '中医适宜技术', src: '/videos/v-acupoint.mp4',     durationSec: 88,  origin: 'team_reviewed' },
-  { id: 'v-drum',         title: '空灵鼓教学',     category: '中医适宜技术', src: '/videos/v-drum.mp4',         durationSec: 60,  origin: 'team_reviewed' },
+  { id: 'v-joint',        title: '关节活动',       category: '肢体训练类',   src: '/videos/v-joint.mp4',        durationSec: 69,  origin: 'team_reviewed' },
+  { id: 'v-dress',        title: '穿脱衣物',       category: '基础照护类',   src: '/videos/v-dress.mp4',        durationSec: 109, origin: 'team_reviewed' },
+  { id: 'v-posture',      title: '良肢位摆放',     category: '基础照护类',   src: '/videos/v-posture.mp4',      durationSec: 82,  origin: 'team_reviewed' },
+  { id: 'v-bp',           title: '血压监测',       category: '基础照护类',   src: '/videos/v-bp.mp4',           durationSec: 172, origin: 'team_reviewed' },
+  { id: 'v-walker',       title: '助行器行走',     category: '智能辅具类',   src: '/videos/v-walker.mp4',       durationSec: 171, origin: 'team_reviewed' },
+  { id: 'v-bandage',      title: '康复辅具绷带使用', category: '智能辅具类', src: '/videos/v-bandage.mp4',      durationSec: 82,  origin: 'team_reviewed' },
+  { id: 'v-vr',           title: 'VR 训练',        category: '智能辅具类',   src: '/videos/v-vr.mp4',           durationSec: 161, origin: 'team_reviewed' },
+  { id: 'v-attention',    title: '注意力训练',     category: '肢体训练类',   src: '/videos/v-attention.mp4',    durationSec: 73,  origin: 'team_reviewed' },
+  { id: 'v-memory',       title: '短时记忆训练',   category: '肢体训练类',   src: '/videos/v-memory.mp4',       durationSec: 93,  origin: 'team_reviewed' },
+  { id: 'v-head-massage', title: '头部按摩',       category: '基础照护类', src: '/videos/v-head-massage.mp4', durationSec: 307, origin: 'team_reviewed' },
+  { id: 'v-acupoint',     title: '穴位按摩',       category: '基础照护类', src: '/videos/v-acupoint.mp4',     durationSec: 88,  origin: 'team_reviewed' },
+  { id: 'v-drum',         title: '音乐律动操',     category: '肢体训练类', src: '/videos/v-drum.mp4',         durationSec: 60,  origin: 'team_reviewed' },
 ]
 
 /** 视频库分组顺序 —— 与甲方交付的文件夹结构一致 */
-export const VIDEO_CATEGORIES = ['吞咽康复类', '肢体康复类', '认知训练类', '日常护理类', '中医适宜技术', '康复辅具类'] as const
+export const VIDEO_CATEGORIES = ['吞咽康复类', '肢体训练类', '智能辅具类', '基础照护类'] as const
 
 
 
 /* ---------- 历史打卡：为打卡日历提供演示数据 ---------- */
 
 /** 居家康复建档日（首次入户评估日）—— 打卡历史与日历可翻阅范围的起点 */
-export const HOMECARE_START: ISODate = '2026-07-07'
+export const HOMECARE_START: ISODate = '2026-09-12'
 
 export function toISODate(d: Date): ISODate {
   const y = d.getFullYear()
@@ -378,30 +330,9 @@ export function toISODate(d: Date): ISODate {
  * 模式按距今天数取模：每 7 天缺 1 项，每 11 天缺 2 项，其余全完成。
  */
 export function buildHistory(today: Date, fromISO: ISODate = HOMECARE_START): CheckIn[] {
-  const out: CheckIn[] = []
-  const from = new Date(fromISO)
-  const cursor = new Date(from)
-  const end = new Date(today)
-  end.setDate(end.getDate() - 1)
-
-  while (cursor <= end) {
-    const date = toISODate(cursor)
-    const back = Math.round((today.getTime() - cursor.getTime()) / 86400000)
-    const missCount = back % 11 === 0 ? 2 : back % 7 === 0 ? 1 : 0
-    taskDefs.forEach((t, idx) => {
-      const missed = idx >= taskDefs.length - missCount
-      out.push({
-        id: `ci-${date}-${t.id}`,
-        patientId: PATIENT_ID,
-        taskId: t.id,
-        date,
-        status: missed ? 'missed' : 'done',
-        at: missed ? undefined : `${date}T${t.scheduledTime}:00`,
-      })
-    })
-    cursor.setDate(cursor.getDate() + 1)
-  }
-  return out
+  void today
+  void fromISO
+  return []
 }
 
 /* ---------- 血压：安全范围与演示基线 ---------- */
@@ -426,31 +357,6 @@ export function isBpAbnormal(v: { systolic: number; diastolic: number }): boolea
  * 09:00 那条是康复护士小彭训练前测的 112/70，与评估表一致。
  */
 export function buildVitals(today: Date): VitalRecord[] {
-  const out: VitalRecord[] = []
-  const plan: Array<[number, string, number, number, VitalRecord['by']]> = [
-    [3, '07:10', 126, 78, '家属'],
-    [3, '20:35', 132, 80, '家属'],
-    [2, '07:05', 122, 76, '家属'],
-    [2, '20:40', 128, 82, '家属'],
-    [1, '07:15', 124, 79, '家属'],
-    [1, '20:30', 130, 84, '家属'],
-    [0, '07:05', 118, 74, '家属'],
-    [0, '09:00', 112, 70, '康复护士'],
-  ]
-  for (const [daysAgo, time, systolic, diastolic, by] of plan) {
-    const d = new Date(today)
-    d.setDate(d.getDate() - daysAgo)
-    const date = toISODate(d)
-    out.push({
-      id: `vital-${date}-${time.replace(':', '')}`,
-      patientId: PATIENT_ID,
-      date,
-      time,
-      systolic,
-      diastolic,
-      by,
-      at: `${date}T${time}:00`,
-    })
-  }
-  return out.sort((a, b) => a.at.localeCompare(b.at))
+  void today
+  return []
 }

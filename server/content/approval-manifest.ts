@@ -1,27 +1,28 @@
 import { createHash } from 'crypto'
 
 /**
- * 2026-09-04 用户确认通过并启用的内容版本。
+ * 2026-09-14 用户确认按所附王萍奶奶资料更新并用于本次演示的内容版本。
+ * 此记录表示演示内容启用，不替代临床专业审核。
  *
  * 审批绑定「稳定 ID + 内容哈希」而不是只绑定 ID：同一条内容一旦被改写，
  * 哈希就不再匹配，重新灌种或导入时会回到 pending，避免新内容自动继承旧审批。
  */
-export const APPROVAL_RECORDED_AT = '2026-09-04T04:02:49.651Z'
+export const APPROVAL_RECORDED_AT = '2026-09-14T02:45:00.000Z'
 
 export const APPROVED_PRESET_QA: Readonly<Record<string, string>> = {
-  choking: 'adf9c126143a9c27a69ed53990ca63a237743acab6865e361b7f2c2a841cbbe4',
-  'too-tired': '586230e7fc5d4c1c171557545aa0f3dd61e511728beb0b17bef8307112f79b8c',
-  'bp-high': '4b0eb80ecdaea1f1eabebfb73e07916af35e3ba9c1096bd380ec4c1bb28eb468',
-  'sore-legs': '38ccc75056d152fb51929fbb2d9c755ae50c94e422577c615b9375b4737d3dc9',
-  meals: 'a117c8a8013742b2a50da2ffc58da20b71612506a85a76e83e45fbd39933da87',
+  choking: '582059b3197e6f592630bbbed6740242993b40f349f00a96b69816f83ac50050',
+  'too-tired': 'ab2c6d72990101ed2c48f75eae178d4eaf198348208220c702e9e0ff63291f94',
+  'bp-high': '1a8a3bb64700621d36f093ee97d7efa0967d2fcb5f423b3a3e7e9fa6ec86119a',
+  'sore-legs': 'e5b15c230b30786a54c85535c8fb270a18e9d18a340c629e4510366e96423747',
+  meals: '30f95180e0c1accab2c6a33a96210a077127298875b80f37609578fcff807925',
 }
 
 export const APPROVED_GUIDANCE: Readonly<Record<string, string>> = {
-  feeding: 'a1be5b3495e145fe1873552f6ba58bab6187117223f2b87c8597c551dc889258',
-  texture: '6faf450b093f9332f974ffcedaeb3ef1d9035c50cb4d7d2a8090c0de3dab4b0b',
-  menu: 'e118ac3ac4d6c6359a50bcd9629888331a539bacde65d255918bb5a8dc7f5354',
-  'bp-diet': '9541da11d037b73c3157f6089b9db38693825c965f31604c7be7f2b67cd4226d',
-  taboo: 'adc77912da65ddb6511cbf77aac339f2e4c06d8b353534a0d59893a0bbbb6a57',
+  feeding: 'eaee6ebe544c6e2f6de818d2a886b5cc20de95e88241f2a53c41e3658488b746',
+  texture: 'd37ed9ee7cebb38d2d3e0ff8768fe5a31ab07b799c64ea2d284558356ebd43c0',
+  menu: '043757b59858e5ac97e4eff1612c2d1248e33e612026104944164f359744efff',
+  'bp-diet': '81f0a262d17abdaf859e1769b90077d94009169db0b58d99951f9cbb03890389',
+  taboo: '63d77ef17bd1813a6b85c97adee53a8f00d0474a0ee68d7ab5cb8845a9e95dc1',
 }
 
 export const APPROVED_VIDEO_STEPS: Readonly<Record<string, string>> = {

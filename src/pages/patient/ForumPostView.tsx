@@ -35,7 +35,7 @@ export function ForumPostView() {
         </div>
         <h1 className="card-title" style={{ fontSize: 'var(--t-xl)' }}>{p.title}</h1>
         <p className="card-note" style={{ marginTop: 6 }}>
-          {p.author} · {p.role === '康复师' ? '康复师' : '家属'} · {p.time}
+          {p.author} · {p.role === '康复师' ? '护理员' : '家属'} · {p.time}
         </p>
         <div style={{ display: 'grid', gap: 10, marginTop: 16 }}>
           {p.body.map((t, i) => (
@@ -54,7 +54,7 @@ export function ForumPostView() {
             <span className="who-dot">{r.author[0]}</span>
             <b style={{ fontSize: 'var(--t-sm)' }}>{r.author}</b>
             <span className="chip" style={r.role === '康复师' ? { background: 'var(--green-100)', color: 'var(--green-700)' } : undefined}>
-              {r.role === '康复师' ? '康复师' : '家属'}
+              {r.role === '康复师' ? '护理员' : '家属'}
             </span>
           </div>
           <p style={{ margin: 0, lineHeight: 1.8 }}>{r.text}</p>

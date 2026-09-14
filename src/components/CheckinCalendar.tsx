@@ -127,7 +127,7 @@ export function CheckinCalendar() {
                 <span className="cell-mark">
                   {c.state === 'full' && <IconCheck size={12} />}
                   {c.state === 'partial' && <span className="num">缺 {taskDefs.length - c.done}</span>}
-                  {c.state === 'none' && <span>未完成</span>}
+                  {c.state === 'none' && <span>未开始</span>}
                 </span>
               </div>
             )
@@ -137,7 +137,7 @@ export function CheckinCalendar() {
         <div className="legend">
           <span><i style={{ background: 'var(--ok-bg)' }} />全部完成</span>
           <span><i style={{ background: 'var(--wait-bg)' }} />部分完成</span>
-          <span><i style={{ background: 'var(--miss-bg)' }} />未完成</span>
+          <span><i style={{ background: 'var(--miss-bg)' }} />未开始</span>
           <span><i style={{ background: 'var(--surface-2)' }} />无记录</span>
           <span><i style={{ background: 'transparent', border: '1px dashed var(--line-2)' }} />未到</span>
         </div>
@@ -163,8 +163,8 @@ export function CheckinCalendar() {
                       : status === 'difficulty'
                         ? <span className="chip chip-wait">已反馈困难</span>
                         : status === 'missed'
-                          ? <span className="chip chip-miss">未完成</span>
-                          : <span className="chip">待完成</span>}
+                          ? <span className="chip chip-miss">未开始</span>
+                          : <span className="chip">未开始</span>}
                   </td>
                 </tr>
               ))}

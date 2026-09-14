@@ -27,44 +27,49 @@ export const DAILY_REMINDERS: ReminderDef[] = [
     id: 'rm-bp-morning',
     time: '07:00',
     taskId: 'task-vitals-morning',
-    text: '☀️ 陈阿姨早上好～该给林奶奶量血压啦。量之前记得让奶奶先躺 30 秒、坐 30 秒、再站起来，量完把数值录进来，小安帮您记着。',
+    text: '☀️ 李英女士早上好～该给王萍奶奶量血压啦。量完把数值录进来，小安帮您记着。',
   },
   {
     id: 'rm-med',
     time: '07:30',
     taskId: 'task-med-morning',
-    text: '💊 该给奶奶吃降压药了，饭后半小时吃哦，别空腹。吃完在这点一下「已服药」就行。',
+    text: '💊 该给王萍奶奶服用降压药了，请严格按医嘱执行，完成后点一下「已服药」。',
   },
   {
     id: 'rm-training',
-    time: '08:30',
+    time: '08:00',
     taskId: 'task-lower-limb',
-    text: '🦵 今天的康复训练开始啦～先做下肢活动，再做吞咽操，做完一项点一下完成 ✅。训练时在旁边保护好奶奶，训练前先确认血压正常。',
+    text: '👄 08:00 吞咽训练时间到了，请按计划完成；如有明显不适立即停止并联系康康·资深护理员。',
   },
   {
     id: 'rm-swallow',
-    time: '09:30',
+    time: '08:30',
     taskId: 'task-swallow',
-    text: '👄 吞咽操时间到啦：深呼吸 3 次 → 张口闭口 5 次 → 嘟嘴咧嘴各 3 次 → 发「咿」音 3 遍，跟着视频做 5 分钟就好。',
+    text: '🥣 08:30 鼻饲喂食时间到了。请按 3-1-3 检查法与鼻饲流程操作，结束后保持体位 30～60 分钟；腹胀或腹泻时立即停止。',
   },
+  ...(['10:30', '12:30', '14:30', '16:30', '18:30'] as const).map((time) => ({
+    id: `rm-feed-${time.replace(':', '')}`,
+    time,
+    text: `🥣 ${time} 进食提醒：请按已确认的鼻饲方案操作；出现腹胀或腹泻立即停止并联系专业人员。`,
+  })),
   {
     id: 'rm-cognition',
-    time: '15:00',
+    time: '16:00',
     taskId: 'task-cognition',
-    text: '🧠 认知训练时间，如使用 VR 眼镜请帮忙佩戴，训练后询问有无头晕。',
+    text: '🦿 16:00 外骨骼助力行走时间到了，先完成平衡能力测试，再按四步指令训练，全程在旁保护。',
   },
   {
     id: 'rm-skin',
-    time: '16:30',
+    time: '17:00',
     taskId: 'task-skin',
-    text: '🔍 今天检查过奶奶皮肤了吗？骶尾部、足跟、外踝都看看有没有发红，有异常随时拍照发给我们。',
+    text: '🎵 17:00 音乐律动操时间到了，请充分热身，建议训练 10 分钟。',
   },
   {
     id: 'rm-bp-night',
     time: '20:30',
     taskId: 'task-vitals-night',
     highlight: true,
-    text: '🌙 准备睡觉啦，睡前再给奶奶量一次血压，录进来就安心了。可以帮奶奶按揉太阳穴 20 次、开天门 20 次，放轻音乐助眠。',
+    text: '🌙 准备睡觉啦，睡前再给王萍奶奶量一次血压，录进来就安心了。',
   },
 ]
 
@@ -73,5 +78,5 @@ export const DAILY_REMINDERS: ReminderDef[] = [
  * 只在今日确实出现过超标记录时才进入提醒列表 —— 不是预先摆在那里的假记录。
  */
 export function abnormalBpReminder(systolic: number, diastolic: number): string {
-  return `⚠️ 林奶奶本次血压为 ${systolic}/${diastolic} mmHg，超出安全范围（90–139 / 60–89）。请让奶奶安静坐下休息，不要自行加药，10 分钟后复测一次。此预警已同步通知康复师，我们会尽快联系您。`
+  return `⚠️ 王萍奶奶本次血压为 ${systolic}/${diastolic} mmHg，超出安全范围（90–139 / 60–89）。请让奶奶安静坐下休息，不要自行加药，10 分钟后复测一次。此预警已同步通知康康·资深护理员，我们会尽快联系您。`
 }

@@ -66,7 +66,7 @@ export function TherapistShell() {
             <span className="brand-mark"><IconLeaf size={17} /></span>
             <span>
               <div className="brand-name">银康安馨</div>
-              <div className="brand-sub">康复师工作台</div>
+              <div className="brand-sub">护理员工作台</div>
             </span>
           </div>
           <nav className="nav">
