@@ -1,0 +1,30 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.preview
+
+# 视频素材必须进仓：部署从仓库构建，且现场演示要求断网可用，不能依赖外部存储
+
+# SQLite 数据库：运行时产物，不进仓（用 pnpm seed 重建）
+/data/
