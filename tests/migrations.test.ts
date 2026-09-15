@@ -22,6 +22,7 @@ describe('数据库迁移', () => {
       '0001_init.sql',
       '0002_care_alerts.sql',
       '0003_review_audit.sql',
+      '0004_exoskeleton_five_actions.sql',
     ])
   })
 
@@ -31,6 +32,29 @@ describe('数据库迁移', () => {
     getDb()
     const after = (getDb().prepare('SELECT count(*) c FROM schema_migrations').get() as any).c
     expect(after).toBe(before)
+  })
+
+  it('0004 会把既有库的外骨骼任务与提醒升级为五动作口径', () => {
+    const db = getDb()
+    const now = new Date().toISOString()
+    db.prepare(`INSERT INTO patients (id,name,gender,age_band,status,created_at,updated_at)
+      VALUES ('p-migration','迁移测试','女','演示','active',?,?)`).run(now, now)
+    db.prepare(`INSERT INTO task_defs
+      (id,patient_id,kind,title,scheduled_time,instruction,cautions,reps,origin,active_from)
+      VALUES ('task-cognition','p-migration','training','外骨骼助力行走','16:00','旧四步指令','[]','四步','therapist_confirmed','2026-01-01')`).run()
+    db.prepare(`INSERT INTO reminders (id,patient_id,time,text,task_id)
+      VALUES ('rm-cognition','p-migration','16:00','旧四步提醒','task-cognition')`).run()
+    db.prepare("DELETE FROM schema_migrations WHERE name = '0004_exoskeleton_five_actions.sql'").run()
+
+    closeDb()
+    const migrated = getDb()
+    const task = migrated.prepare("SELECT instruction, reps FROM task_defs WHERE id = 'task-cognition'").get() as any
+    const reminder = migrated.prepare("SELECT text FROM reminders WHERE id = 'rm-cognition'").get() as any
+
+    expect(task.instruction).toContain('蹲起、向前走、后撤一步、向左走、向右走五个动作')
+    expect(task.reps).toContain('共 5 个动作')
+    expect(reminder.text).toContain('五个动作')
+    expect(`${task.instruction}${task.reps}${reminder.text}`).not.toContain('四步')
   })
 
   it('28 张业务表全部建出', () => {

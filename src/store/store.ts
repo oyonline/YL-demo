@@ -175,21 +175,21 @@ export function getState(): DemoState {
  * 后台提交。失败就从服务端重拉 —— 界面退回真实状态，
  * 而不是留着一个本地看着成功、库里其实没有的记录。
  */
-function push(path: string, method: string, body: unknown) {
-  void (async () => {
-    try {
-      const res = await authFetch(path, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      })
-      if (!res.ok) throw new Error(`${method} ${path} → ${res.status}`)
-    } catch (e) {
-      if (e instanceof SessionExpiredError) return
-      console.error('[store] 提交失败，已回滚到服务端状态', e)
-      void load()
-    }
-  })()
+async function push(path: string, method: string, body: unknown): Promise<boolean> {
+  try {
+    const res = await authFetch(path, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    if (!res.ok) throw new Error(`${method} ${path} → ${res.status}`)
+    return true
+  } catch (e) {
+    if (e instanceof SessionExpiredError) return false
+    console.error('[store] 提交失败，已回滚到服务端状态', e)
+    await load()
+    return false
+  }
 }
 
 function nextId(prefix: string, at: Date) {
@@ -198,7 +198,12 @@ function nextId(prefix: string, at: Date) {
 
 /* ---------- actions（签名与 P3 之前完全一致） ---------- */
 
-export function setCheckIn(taskId: string, status: CheckInStatus, note?: string, date = toISODate(new Date())) {
+function updateCheckInOptimistically(
+  taskId: string,
+  status: CheckInStatus,
+  note: string | undefined,
+  date: string,
+) {
   const s = cache
   const at = new Date()
   const existing = s.checkIns.find((c) => c.taskId === taskId && c.date === date)
@@ -217,7 +222,25 @@ export function setCheckIn(taskId: string, status: CheckInStatus, note?: string,
     checkIns: existing ? s.checkIns.map((c) => (c.id === existing.id ? entry : c)) : [...s.checkIns, entry],
   }
   emit()
-  push(`/api/patients/${patientId}/checkins`, 'PUT', { taskId, status, note, date })
+}
+
+export function setCheckIn(taskId: string, status: CheckInStatus, note?: string, date = toISODate(new Date())) {
+  updateCheckInOptimistically(taskId, status, note, date)
+  void push(`/api/patients/${patientId}/checkins`, 'PUT', { taskId, status, note, date })
+}
+
+/**
+ * 需要明确展示跨端同步结果的流程使用这一入口。
+ * 原有 setCheckIn 的同步签名保持不变；这里额外返回服务端是否确认写入。
+ */
+export function setCheckInWithServerAck(
+  taskId: string,
+  status: CheckInStatus,
+  note?: string,
+  date = toISODate(new Date()),
+): Promise<boolean> {
+  updateCheckInOptimistically(taskId, status, note, date)
+  return push(`/api/patients/${patientId}/checkins`, 'PUT', { taskId, status, note, date })
 }
 
 export function addUpload(taskId: string, filename: string, sizeLabel: string, playbackVideoId: string) {
@@ -234,7 +257,7 @@ export function addUpload(taskId: string, filename: string, sizeLabel: string, p
     checkIns: s.checkIns.map((c) => (c.taskId === taskId && c.date === date ? { ...c, uploadId: upload.id } : c)),
   }
   emit()
-  push(`/api/patients/${patientId}/uploads`, 'POST', { id: upload.id, taskId, filename, sizeLabel, playbackVideoId })
+  void push(`/api/patients/${patientId}/uploads`, 'POST', { id: upload.id, taskId, filename, sizeLabel, playbackVideoId })
 }
 
 /** 返回新消息 id，供打字机效果定位当前正在输出的那条 */
@@ -244,7 +267,7 @@ export function addMessage(msg: Omit<ChatMessage, 'id' | 'at' | 'patientId'>) {
   const id = nextId('msg', at)
   cache = { ...s, messages: [...s.messages, { ...msg, id, at: at.toISOString(), patientId }] }
   emit()
-  push(`/api/patients/${patientId}/messages`, 'POST', { id, ...msg })
+  void push(`/api/patients/${patientId}/messages`, 'POST', { id, ...msg })
   return id
 }
 
@@ -257,7 +280,7 @@ export function addGuidance(text: string, therapistName: string, aboutTaskId?: s
   }
   cache = { ...s, guidances: [...s.guidances, g] }
   emit()
-  push(`/api/patients/${patientId}/guidances`, 'POST', { id: g.id, text, therapistName, aboutTaskId, aboutDate })
+  void push(`/api/patients/${patientId}/guidances`, 'POST', { id: g.id, text, therapistName, aboutTaskId, aboutDate })
 }
 
 export function markGuidanceRead(id: string) {
@@ -265,7 +288,7 @@ export function markGuidanceRead(id: string) {
   if (!s.guidances.some((g) => g.id === id && !g.readByFamily)) return
   cache = { ...s, guidances: s.guidances.map((g) => (g.id === id ? { ...g, readByFamily: true } : g)) }
   emit()
-  push(`/api/patients/${patientId}/guidances/read`, 'POST', { id })
+  void push(`/api/patients/${patientId}/guidances/read`, 'POST', { id })
 }
 
 /** 家属端打开今日页即视为已读；康复师端据此显示"家属已读" */
@@ -274,7 +297,7 @@ export function markAllGuidanceRead() {
   if (!s.guidances.some((g) => !g.readByFamily)) return
   cache = { ...s, guidances: s.guidances.map((g) => ({ ...g, readByFamily: true })) }
   emit()
-  push(`/api/patients/${patientId}/guidances/read`, 'POST', {})
+  void push(`/api/patients/${patientId}/guidances/read`, 'POST', {})
 }
 
 export function createEscalation(input: {
@@ -290,7 +313,7 @@ export function createEscalation(input: {
   }
   cache = { ...s, escalations: [...s.escalations, e] }
   emit()
-  push(`/api/patients/${patientId}/escalations`, 'POST', { id: e.id, ...input })
+  void push(`/api/patients/${patientId}/escalations`, 'POST', { id: e.id, ...input })
   return e
 }
 
@@ -311,7 +334,7 @@ export function answerEscalation(id: string, answer: string, therapistName: stri
     } as ChatMessage],
   }
   emit()
-  push(`/api/patients/${patientId}/escalations/${id}`, 'PATCH', { answer, therapistName, messageId })
+  void push(`/api/patients/${patientId}/escalations/${id}`, 'PATCH', { answer, therapistName, messageId })
 }
 
 /**
@@ -340,13 +363,13 @@ export function addVital(systolic: number, diastolic: number, by: VitalRecord['b
   }
   cache = { ...cache, vitals: [...cache.vitals, rec] }
   emit()
-  push(`/api/patients/${patientId}/vitals`, 'POST', { id: rec.id, systolic, diastolic, by })
+  void push(`/api/patients/${patientId}/vitals`, 'POST', { id: rec.id, systolic, diastolic, by })
   return rec
 }
 
 /** 排练用：一键回到演示初始状态 */
 export function resetDemo() {
-  push(`/api/patients/${patientId}/reset`, 'POST', {})
+  void push(`/api/patients/${patientId}/reset`, 'POST', {})
   void load()
 }
 

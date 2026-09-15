@@ -20,6 +20,7 @@ import { ResourcesView } from './ResourcesView'
 import { ResourceDetailView } from './ResourceDetailView'
 import { ForumView } from './ForumView'
 import { ForumPostView } from './ForumPostView'
+import { ExoskeletonView } from './ExoskeletonView'
 import '../../styles/app.css'
 
 /**
@@ -79,6 +80,7 @@ function PatientShellInner() {
   const nav = useNavigate()
   const { pathname } = useLocation()
   const atHome = pathname === '/patient'
+  const inExoskeletonTraining = pathname === '/patient/exoskeleton'
   const session = currentSession()
   const [profileOpen, setProfileOpen] = useState(false)
   const state = useDemoState()
@@ -126,7 +128,15 @@ function PatientShellInner() {
         </div>
       </header>
 
-      <main className="page" style={{ display: 'grid', gridTemplateColumns: '332px 1fr', gap: 22, alignItems: 'start' }}>
+      <main
+        className={`page${inExoskeletonTraining ? ' exo-page-shell' : ''}`}
+        style={{
+          display: 'grid',
+          gridTemplateColumns: inExoskeletonTraining ? 'minmax(0, 1fr)' : '332px minmax(0, 1fr)',
+          gap: 22,
+          alignItems: 'start',
+        }}
+      >
         {/*
           档案卡三段式：身份 → 评估摘要 → 今日须注意。
           这根左栏演示全程常驻可见，是评委看得最久的一块，所以只放三样东西：
@@ -134,7 +144,7 @@ function PatientShellInner() {
           诊断细节、活动能力全文、入院经过等长文都收进「查看完整档案」——
           放在这里既读不完，也把真正值钱的量表分值挤没了。
         */}
-        <aside className="card profile">
+        {!inExoskeletonTraining && <aside className="card profile">
           {/* ① 身份 */}
           {/*
             头像与右侧两行文字上下对齐：头像 56px，恰好等于姓名行 + 年龄行的高度。
@@ -194,10 +204,10 @@ function PatientShellInner() {
               ? <ul>{careAlerts.map((a) => <li key={a}>{a}</li>)}</ul>
               : <div className="card-note" style={{ marginTop: 8 }}>暂无个性化注意事项</div>}
           </div>
-        </aside>
+        </aside>}
 
         {/* 内容列：二级页顶部给一个固定的「返回首页」，门户化后这是唯一的全局回跳入口 */}
-        <div className="content-col">
+        <div className={`content-col${inExoskeletonTraining ? ' exo-focus-col' : ''}`}>
           {!atHome && (
             <Link to="/patient" className="btn btn-lg back-home">
               <IconHome size={18} /> 返回首页
@@ -207,6 +217,7 @@ function PatientShellInner() {
             <Route index element={<TodayView />} />
             <Route path="videos" element={<VideoLibraryView />} />
             <Route path="videos/:id" element={<VideoDetailView />} />
+            <Route path="exoskeleton" element={<ExoskeletonView />} />
             <Route path="chat" element={<ChatView />} />
             <Route path="calendar" element={<CheckinCalendar />} />
             <Route path="vitals" element={<VitalsView />} />

@@ -6,6 +6,7 @@ import { createEscalation, effectiveStatus, markAllGuidanceRead, setCheckIn, tod
 import { IconActivity, IconAlert, IconCheck, IconClock, IconHeart, IconPill, IconPlay, IconShield } from '../../components/Icons'
 import { Lines } from '../../components/Lines'
 import { HomeEntries } from './HomeEntries'
+import { EXOSKELETON_TASK_ID } from '../../features/exoskeleton/session'
 
 export function TodayView() {
   const { patient, taskDefs, therapist } = usePatientData()
@@ -126,7 +127,9 @@ export function TodayView() {
             const isNext = next?.task.id === task.id
             const video = task.videoId ? videos.find((v) => v.id === task.videoId) : undefined
             // 主操作按任务性质区分：服药是终态确认，训练要先看示范再打卡
-            const main = task.kind === 'medication'
+            const main = task.id === EXOSKELETON_TASK_ID
+              ? { label: '开始训练', run: () => nav('/patient/exoskeleton') }
+              : task.kind === 'medication'
               ? { label: '确认已服药', run: () => setCheckIn(task.id, 'done') }
               : task.kind === 'record'
                 ? { label: '已记录', run: () => setCheckIn(task.id, 'done') }
