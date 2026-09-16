@@ -728,6 +728,22 @@
 .exo-workspace .exo-progress-copy { flex-direction: column; align-items: flex-end; gap: 1px; }
 .exo-workspace .exo-progress-copy strong { color: var(--teal-800); font-size: 24px; }
 .exo-workspace .exo-progress { margin: 16px 0 25px; }
+.exo-reference {
+  display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 30px; align-items: center;
+  margin-bottom: 26px; padding: 24px; border: 1px solid var(--teal-100); border-radius: var(--r-lg);
+  background: linear-gradient(135deg, var(--teal-50), var(--surface));
+}
+.exo-reference-media {
+  display: grid; place-items: center; overflow: hidden; min-height: 420px;
+  border-radius: var(--r-lg); background: #0d1917;
+}
+.exo-reference-media video { display: block; width: 100%; height: 440px; object-fit: contain; background: #0d1917; }
+.exo-reference-copy h3 { margin-top: 5px; font-size: clamp(25px, 2.8vw, 34px); line-height: 1.25; }
+.exo-reference-copy > p { margin-top: 14px; color: var(--ink-2); font-size: var(--t-base); line-height: 1.75; }
+.exo-reference-points { display: grid; gap: 11px; margin-top: 22px; }
+.exo-reference-points li { display: flex; align-items: center; gap: 10px; color: var(--ink-2); font-size: var(--t-sm); }
+.exo-reference-points svg { flex: none; color: var(--teal-700); }
+.exo-reference-note { margin-top: 22px; padding: 11px 13px; border-radius: var(--r); background: var(--surface); color: var(--ink-3); font-size: var(--t-xs); }
 .exo-inline-stop {
   display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 16px; align-items: center;
   margin-bottom: 24px; padding: 18px 20px; border: 1px solid #ebc2bd;
@@ -774,7 +790,8 @@
     repeating-linear-gradient(0deg, transparent 0 35px, rgba(17, 92, 85, .032) 36px),
     var(--teal-50);
 }
-.exo-step-media img { display: block; width: 100%; height: 350px; object-fit: contain; }
+.exo-step-media img,
+.exo-step-media video { display: block; width: 100%; height: 350px; object-fit: contain; }
 .exo-step-direction {
   position: absolute; top: 13px; left: 13px; z-index: 2;
   width: 42px; height: 42px; display: grid; place-items: center;
@@ -832,6 +849,9 @@
 .exo-finish-actions .exo-primary { min-height: 48px; padding: 9px 18px; }
 
 @media (max-width: 900px) {
+  .exo-reference { grid-template-columns: 240px minmax(0, 1fr); gap: 22px; }
+  .exo-reference-media { min-height: 350px; }
+  .exo-reference-media video { height: 370px; }
   .exo-action-grid { grid-template-columns: 1fr; }
   .exo-step-card,
   .exo-step-card:last-child:nth-child(odd) { grid-column: auto; grid-template-columns: 210px minmax(0, 1fr); }
@@ -849,11 +869,15 @@
   .exo-ready-row { grid-column: auto; }
   .exo-ready-row { grid-template-columns: 1fr; }
   .exo-workspace { padding: 22px 14px; }
+  .exo-reference { grid-template-columns: 1fr; padding: 16px; }
+  .exo-reference-media { min-height: 0; }
+  .exo-reference-media video { height: min(70vh, 560px); }
   .exo-workspace-head { align-items: flex-start; }
   .exo-step-card,
   .exo-step-card:last-child:nth-child(odd) { grid-template-columns: 1fr; }
   .exo-step-media { grid-column: 1; grid-row: 2; min-height: 340px; border-right: 0; border-bottom: 1px solid var(--line); }
-  .exo-step-media img { height: 340px; }
+  .exo-step-media img,
+  .exo-step-media video { height: 340px; }
   .exo-step-body { grid-column: 1; grid-row: 3; min-height: 260px; }
   .exo-inline-stop,
   .exo-finish-panel { grid-template-columns: 1fr; text-align: center; }
@@ -1322,6 +1346,16 @@
 /* ---------------- 健康数据（血压） ----------------
    甲方需求书 3.5。录入区做成「高压 / 低压」两个框并排，
    跟血压计上的读数顺序一致 —— 家属现场照着抄，不用想哪个填哪。 */
+.vitals-tabs {
+  display: inline-flex; width: fit-content; padding: 4px; gap: 4px;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2);
+}
+.vitals-tab {
+  border: 0; border-radius: 9px; padding: 9px 20px; background: transparent;
+  color: var(--ink-3); font: inherit; font-size: var(--t-sm); font-weight: 650; cursor: pointer;
+}
+.vitals-tab[aria-selected='true'] { background: var(--surface); color: var(--teal-800); box-shadow: var(--sh-1); }
+.vitals-tab:focus-visible { outline: 2px solid var(--teal-300); outline-offset: 2px; }
 .bp-form { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
 .bp-field { display: block; }
 .bp-field > span { display: block; font-size: var(--t-xs); color: var(--ink-3); margin-bottom: 6px; letter-spacing: .04em; }
@@ -1378,6 +1412,219 @@
   0% { background: var(--green-100); }
   100% { background: transparent; }
 }
+
+/* 鼻饲液恒温监测：设备感的深色面板只作用于这个功能区，不改变家属端整体暖色皮肤。 */
+.feed-monitor {
+  --feed-bg: #081523; --feed-panel: #0e1c2d; --feed-line: #22394f;
+  --feed-text: #e9f5fb; --feed-muted: #85a1b4; --feed-cyan: #34d6cf; --feed-blue: #48b9f1;
+  overflow: hidden; padding: 16px; border-radius: 18px; color: var(--feed-text);
+  background: var(--feed-bg); box-shadow: 0 18px 50px -28px rgba(8, 21, 35, .8);
+}
+.feed-topbar {
+  display: grid; grid-template-columns: minmax(180px, 1fr) auto auto; align-items: center; gap: 18px;
+  padding: 11px 14px; border: 1px solid var(--feed-line); border-radius: 14px; background: #102033;
+}
+.feed-device { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.feed-device > span:last-child { display: grid; }
+.feed-device strong { font-size: 15px; letter-spacing: .03em; }
+.feed-device small, .feed-clock small { margin-top: 2px; color: var(--feed-muted); font-size: 10px; }
+.feed-logo { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid #247d82; border-radius: 10px; color: var(--feed-cyan); background: #103643; }
+.feed-patient { padding: 8px 13px; border: 1px solid #2a4863; border-radius: 999px; color: var(--feed-muted); font-size: 11px; white-space: nowrap; }
+.feed-patient i { display: inline-block; width: 7px; height: 7px; margin-right: 7px; border-radius: 50%; background: #37dcaa; box-shadow: 0 0 8px #37dcaa; }
+.feed-patient strong { color: var(--feed-text); }.feed-patient b { margin: 0 7px; color: #4e687d; }
+.feed-clock { display: grid; text-align: right; white-space: nowrap; }.feed-clock strong { font: 600 14px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; }
+.feed-status {
+  display: flex; align-items: center; gap: 9px; margin-top: 11px; padding: 10px 14px;
+  border: 1px solid #15766f; border-radius: 12px; color: #2ce0b3; background: #092d31; font-size: 12px; font-weight: 650;
+}
+.feed-status[data-alert='true'] { border-color: #c95763; background: #321923; color: #ff8792; }
+.feed-grid { display: grid; grid-template-columns: minmax(190px, .9fr) minmax(330px, 1.55fr) minmax(220px, 1fr); gap: 11px; margin-top: 11px; }
+.feed-panel { min-width: 0; padding: 15px; border: 1px solid var(--feed-line); border-radius: 15px; background: var(--feed-panel); }
+.feed-panel-title { display: flex; align-items: center; gap: 7px; margin: 0 0 14px; color: var(--feed-muted); font-size: 11px; font-weight: 600; letter-spacing: .05em; }
+.feed-panel-title::after { content: ''; flex: 1; height: 1px; background: var(--feed-line); }
+.feed-panel-title span { color: var(--feed-cyan); }
+.feed-temperature { display: flex; flex-direction: column; align-items: center; }
+.feed-temperature .feed-panel-title { align-self: stretch; }
+.temp-dial {
+  display: grid; place-items: center; width: 150px; height: 150px; padding: 13px; border-radius: 50%;
+  background: conic-gradient(from 215deg, var(--feed-blue) 0 30%, #1c3047 30% 76%, transparent 76%);
+  clip-path: polygon(0 0, 100% 0, 100% 94%, 76% 94%, 50% 78%, 24% 94%, 0 94%);
+}
+.temp-dial > div { display: grid; place-content: center; width: 120px; height: 120px; text-align: center; border-radius: 50%; background: var(--feed-panel); }
+.temp-dial strong { font: 700 38px/1 ui-monospace, SFMono-Regular, Menlo, monospace; }.temp-dial span { margin-left: 3px; color: #c2d3df; }.temp-dial small { margin-top: 8px; color: var(--feed-muted); font-size: 10px; }
+.temp-setting { margin-top: -8px; color: var(--feed-muted); font-size: 11px; }.temp-setting strong { color: #ffc15a; }
+.feed-pill { display: inline-flex; align-items: center; gap: 6px; margin-top: 9px; padding: 5px 10px; border: 1px solid #188b83; border-radius: 999px; color: var(--feed-cyan); background: #0a3236; font-size: 10px; font-style: normal; }
+.temp-controls { display: grid; grid-template-columns: 48px 1fr 48px; gap: 8px; width: 100%; margin-top: auto; padding-top: 22px; }
+.temp-controls button, .temp-presets button, .feed-actions button { border: 1px solid #2b465e; color: var(--feed-text); background: #14253a; cursor: pointer; }
+.temp-controls button { border-radius: 11px; font-size: 23px; }.temp-controls > div { display: grid; place-content: center; min-height: 55px; text-align: center; border: 1px solid #22394f; border-radius: 11px; background: #071322; }
+.temp-controls strong { color: #ffc15a; font: 700 22px/1 ui-monospace, SFMono-Regular, Menlo, monospace; }.temp-controls span { color: var(--feed-muted); font-size: 10px; }.temp-controls small { margin-top: 5px; color: var(--feed-muted); font-size: 9px; }
+.temp-presets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; width: 100%; margin-top: 9px; }.temp-presets button { padding: 8px 2px; border-radius: 8px; font-size: 10px; }.temp-presets button[data-active='true'] { border-color: var(--feed-cyan); color: var(--feed-cyan); background: #0c3a43; }
+.feed-temperature > p { align-self: stretch; margin: 9px 0 0; color: var(--feed-muted); font-size: 9px; }.feed-temperature > p strong { color: #ffc15a; }
+.flow-hero { display: flex; align-items: center; justify-content: center; gap: 48px; min-height: 150px; }
+.feed-bag { position: relative; width: 50px; height: 100px; overflow: hidden; border: 1px solid #6f9bb6; border-radius: 12px 12px 16px 16px; background: #12253a; }
+.feed-bag::before, .feed-bag::after { content: ''; position: absolute; left: 20px; width: 10px; height: 18px; background: #9bb8c6; opacity: .7; }.feed-bag::before { top: -18px; }.feed-bag::after { bottom: -18px; }
+.feed-bag span { position: absolute; right: 0; bottom: 0; left: 0; max-height: 100%; background: linear-gradient(#3289ae, #256a7c); transition: height .7s linear; }
+.flow-reading strong { font: 700 44px/1 ui-monospace, SFMono-Regular, Menlo, monospace; }.flow-reading > span { margin-left: 8px; color: #b4c7d3; font-size: 12px; }.flow-reading em { display: inline-block; margin-left: 9px; padding: 4px 8px; border: 1px solid #198d78; border-radius: 999px; color: #39dfa9; font-size: 9px; font-style: normal; background: #0a342f; }
+.feed-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }.feed-metric { padding: 10px; border: 1px solid var(--feed-line); border-radius: 11px; background: #091626; }.feed-metric span { display: block; color: var(--feed-muted); font-size: 9px; }.feed-metric strong { display: inline-block; margin-top: 6px; font: 700 18px/1 ui-monospace, SFMono-Regular, Menlo, monospace; }.feed-metric small { margin-left: 4px; color: var(--feed-muted); font-size: 9px; }
+.feed-progress { margin-top: 9px; padding: 10px 12px; border: 1px solid var(--feed-line); border-radius: 11px; background: #091626; }.feed-progress > span { color: var(--feed-muted); font-size: 9px; }.feed-progress > div { height: 6px; margin: 8px 0 6px; overflow: hidden; border-radius: 999px; background: #1b3045; }.feed-progress i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--feed-cyan), var(--feed-blue)); transition: width .7s linear; }.feed-progress small { display: flex; justify-content: space-between; color: var(--feed-muted); font-size: 8px; }.feed-progress b { font-weight: 500; }
+.feed-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 14px; }.feed-actions .feed-pill { margin: 0 auto 0 0; }.feed-actions .feed-pill i { width: 7px; height: 7px; border-radius: 50%; background: #37dcaa; box-shadow: 0 0 7px #37dcaa; }.feed-actions button { padding: 7px 12px; border-radius: 8px; font-size: 10px; }.feed-actions button.danger { border-color: #7e3948; color: #ff7889; background: #2c1721; }
+.feed-trend { display: block; width: 100%; height: auto; margin-bottom: 7px; border: 1px solid var(--feed-line); border-radius: 11px; background: #091626; }.feed-trend line { stroke: #193047; stroke-width: 1; }.feed-trend .set-line { stroke: #d6ac58; stroke-dasharray: 4 4; opacity: .75; }.feed-trend polyline { fill: none; stroke: var(--feed-cyan); stroke-width: 2; vector-effect: non-scaling-stroke; }.feed-trend circle { fill: var(--feed-cyan); stroke: #10283a; stroke-width: 2; }
+.trend-legend { display: flex; align-items: center; gap: 5px; margin-bottom: 18px; color: var(--feed-muted); font-size: 8px; }.trend-legend i { width: 14px; height: 2px; margin-left: 9px; background: var(--feed-cyan); }.trend-legend i:nth-child(2) { background: #d6ac58; }
+.feed-events { display: grid; gap: 7px; }.feed-events > div { display: grid; grid-template-columns: 48px 1fr; gap: 7px; padding: 9px; border-left: 2px solid var(--feed-cyan); border-radius: 7px; background: #091626; color: #a9becb; font-size: 8px; line-height: 1.55; }.feed-events time { color: #68879b; font: 8px ui-monospace, SFMono-Regular, Menlo, monospace; }
+@media (max-width: 1100px) {
+  .feed-topbar { grid-template-columns: 1fr auto; }.feed-patient { grid-column: 1 / -1; grid-row: 2; width: fit-content; }
+  .feed-grid { grid-template-columns: 1fr 1.5fr; }.feed-side { grid-column: 1 / -1; }.feed-side .feed-trend { max-height: 210px; }
+}
+@media (max-width: 760px) {
+  .vitals-tabs { width: 100%; }.vitals-tab { flex: 1; padding-inline: 8px; }
+  .feed-monitor { padding: 10px; border-radius: 14px; }.feed-grid { grid-template-columns: 1fr; }.feed-side { grid-column: auto; }
+  .feed-topbar { gap: 10px; }.feed-device small { display: none; }.feed-patient { white-space: normal; }.flow-hero { gap: 30px; }
+}
+
+/* 家属端统一版：参考设备图只取信息，不沿用深色控制台视觉与三栏挤压布局。 */
+.feed-monitor {
+  --feed-bg: var(--surface-2); --feed-panel: var(--surface); --feed-line: var(--line);
+  --feed-text: var(--ink); --feed-muted: var(--ink-3); --feed-cyan: var(--teal-700); --feed-blue: var(--teal-500);
+  padding: 0; overflow: visible; border-radius: 0; color: var(--ink); background: transparent; box-shadow: none;
+}
+.feed-topbar {
+  grid-template-columns: minmax(200px, 1fr) auto auto; padding: 18px 20px;
+  border-color: var(--line); border-radius: var(--r-lg); background: var(--surface); box-shadow: var(--sh-1);
+}
+.feed-logo { width: 42px; height: 42px; border: 0; border-radius: 12px; color: var(--surface); background: var(--teal-700); font-size: 14px; font-weight: 700; }
+.feed-device strong { font-size: var(--t-md); color: var(--ink); }.feed-device small, .feed-clock small { color: var(--ink-4); font-size: var(--t-xs); }
+.feed-patient { padding: 8px 13px; border-color: var(--teal-100); color: var(--ink-3); background: var(--teal-50); font-size: var(--t-xs); }
+.feed-patient i { background: var(--ok); box-shadow: none; }.feed-patient strong { color: var(--teal-800); }.feed-patient b { color: var(--line-2); }
+.feed-clock strong { color: var(--ink); font-size: var(--t-sm); }.feed-status { margin-top: 12px; padding: 12px 16px; border-color: var(--green-200); border-radius: var(--r); color: var(--ok); background: var(--ok-bg); font-size: var(--t-sm); }
+.feed-grid { grid-template-columns: minmax(240px, .9fr) minmax(360px, 1.6fr); gap: 14px; margin-top: 14px; }
+.feed-panel { padding: 20px; border-color: var(--line); border-radius: var(--r-lg); background: var(--surface); box-shadow: var(--sh-1); }
+.feed-panel-title { margin-bottom: 18px; color: var(--ink-3); font-size: var(--t-sm); letter-spacing: .02em; }.feed-panel-title::after { background: var(--line); }.feed-panel-title span { color: var(--teal-700); }
+.feed-side { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(280px, .9fr); gap: 18px 24px; }
+.feed-side > .feed-panel-title:nth-of-type(1) { grid-column: 1; grid-row: 1; }.feed-trend { grid-column: 1; grid-row: 2; }.trend-legend { grid-column: 1; grid-row: 3; }
+.feed-side > .feed-panel-title:nth-of-type(2) { grid-column: 2; grid-row: 1; }.feed-events { grid-column: 2; grid-row: 2 / 4; }
+.temp-dial { width: 164px; height: 164px; background: conic-gradient(from 215deg, var(--teal-500) 0 30%, var(--teal-100) 30% 76%, transparent 76%); }
+.temp-dial > div { width: 132px; height: 132px; background: var(--surface); }.temp-dial strong { color: var(--teal-800); }.temp-dial span { color: var(--ink-3); }.temp-dial small, .temp-setting { color: var(--ink-4); }
+.feed-pill { border-color: var(--green-200); color: var(--ok); background: var(--ok-bg); }
+.temp-controls button, .temp-presets button, .feed-actions button { border-color: var(--line-2); color: var(--ink); background: var(--surface-2); }
+.temp-controls button:hover, .temp-presets button:hover, .feed-actions button:hover { border-color: var(--teal-300); background: var(--teal-50); }
+.temp-controls > div { border-color: var(--line); background: var(--surface); }.temp-controls span, .temp-controls small { color: var(--ink-4); }
+.temp-presets button[data-active='true'] { border-color: var(--teal-500); color: var(--teal-800); background: var(--teal-50); }
+.feed-temperature > p { color: var(--ink-4); text-align: center; }.feed-temperature > p strong { color: var(--wait); }
+.feed-bag { border-color: var(--teal-300); background: var(--teal-50); }.feed-bag span { background: linear-gradient(var(--teal-300), var(--teal-600)); }
+.flow-reading strong { color: var(--teal-800); }.flow-reading > span { color: var(--ink-3); }.flow-reading em { border-color: var(--green-200); color: var(--ok); background: var(--ok-bg); }
+.feed-metric, .feed-progress { border-color: var(--line); background: var(--surface-2); }.feed-metric span, .feed-metric small, .feed-progress > span, .feed-progress small { color: var(--ink-4); }.feed-metric strong { color: var(--ink); }
+.feed-progress > div { background: var(--line); }.feed-progress i { background: linear-gradient(90deg, var(--teal-600), var(--teal-300)); }
+.feed-actions .feed-pill i { background: var(--ok); box-shadow: none; }.feed-actions button.danger { border-color: var(--line-2); color: var(--ink-2); background: var(--surface); }
+.feed-trend { margin: 0; border-color: var(--line); background: var(--surface-2); }.feed-trend line { stroke: var(--line); }.feed-trend .set-line { stroke: var(--wait); }.feed-trend polyline { stroke: var(--teal-600); }.feed-trend circle { fill: var(--teal-600); stroke: var(--surface); }
+.trend-legend { margin: 0; color: var(--ink-4); }.trend-legend i { background: var(--teal-600); }.trend-legend i:nth-child(2) { background: var(--wait); }
+.feed-events > div { grid-template-columns: 56px 1fr; padding: 11px 12px; border-left-color: var(--teal-600); background: var(--surface-2); color: var(--ink-2); font-size: var(--t-xs); }.feed-events time { color: var(--ink-4); font-size: 10px; }
+@media (max-width: 1100px) {
+  .feed-topbar { grid-template-columns: 1fr auto; }.feed-patient { grid-column: 1 / -1; grid-row: 2; }
+  .feed-grid { grid-template-columns: 1fr; }.feed-side { grid-column: auto; }
+}
+@media (max-width: 760px) {
+  .feed-topbar { padding: 16px; }.feed-grid { grid-template-columns: minmax(0, 1fr); }
+  .feed-side { display: block; }.feed-side > .feed-panel-title:nth-of-type(2) { margin-top: 24px; }
+  .feed-events { margin-top: 0; }.feed-metrics { grid-template-columns: 1fr; }.feed-panel { padding: 16px; }
+}
+
+/* 监测信息属于家属高频查看内容，字号不低于家属端正文档位。 */
+.feed-device strong { font-size: var(--t-lg); line-height: 1.35; }
+.feed-device small { margin-top: 4px; font-size: var(--t-sm); }
+.feed-patient { padding: 10px 16px; font-size: var(--t-sm); }
+.feed-clock strong { font-size: var(--t-md); }.feed-clock small { font-size: var(--t-xs); }
+.feed-status { padding: 14px 18px; font-size: var(--t-base); }
+.feed-panel { padding: 24px; }
+.feed-panel-title { margin-bottom: 22px; font-size: var(--t-base); font-weight: 650; }
+.temp-dial { width: 180px; height: 180px; }.temp-dial > div { width: 146px; height: 146px; }
+.temp-dial strong { font-size: 48px; }.temp-dial span { font-size: var(--t-md); }.temp-dial small { margin-top: 10px; font-size: var(--t-sm); }
+.temp-setting { margin-top: -2px; font-size: var(--t-sm); }.temp-setting strong { font-size: var(--t-base); }
+.feed-pill { padding: 7px 12px; font-size: var(--t-sm); }
+.temp-controls { grid-template-columns: 56px 1fr 56px; gap: 10px; padding-top: 26px; }
+.temp-controls button { min-height: 64px; font-size: 28px; }.temp-controls > div { min-height: 64px; }
+.temp-controls strong { font-size: 27px; }.temp-controls span { font-size: var(--t-sm); }.temp-controls small { margin-top: 6px; font-size: var(--t-xs); }
+.temp-presets { gap: 9px; margin-top: 11px; }.temp-presets button { min-height: 42px; padding: 9px 4px; font-size: var(--t-sm); font-weight: 600; }
+.feed-temperature > p { margin-top: 13px; font-size: var(--t-xs); line-height: 1.6; }
+.flow-hero { min-height: 180px; }.feed-bag { width: 58px; height: 116px; }
+.flow-reading strong { font-size: 52px; }.flow-reading > span { font-size: var(--t-base); }.flow-reading em { padding: 6px 10px; font-size: var(--t-xs); }
+.feed-metrics { gap: 10px; }.feed-metric { min-height: 92px; padding: 14px; }.feed-metric span { font-size: var(--t-sm); }.feed-metric strong { margin-top: 10px; font-size: 25px; }.feed-metric small { font-size: var(--t-sm); }
+.feed-progress { margin-top: 12px; padding: 14px 16px; }.feed-progress > span { font-size: var(--t-sm); }.feed-progress > div { height: 8px; margin: 12px 0 9px; }.feed-progress small { font-size: var(--t-xs); }
+.feed-actions { margin-top: 18px; }.feed-actions button { min-height: 40px; padding: 9px 16px; font-size: var(--t-sm); }
+.trend-legend { gap: 8px; font-size: var(--t-xs); }.trend-legend i { width: 20px; }
+.feed-events { gap: 10px; }.feed-events > div { grid-template-columns: 66px 1fr; gap: 10px; padding: 14px; font-size: var(--t-sm); line-height: 1.7; }.feed-events time { font-size: var(--t-xs); }
+
+/* 大数字沿用产品字体与数字等宽特性，不使用代码字体；设定卡留足呼吸空间。 */
+.temp-dial strong,
+.temp-controls strong,
+.flow-reading strong,
+.feed-metric strong {
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+  font-weight: 680;
+  letter-spacing: -.025em;
+}
+.temp-dial strong { line-height: 1.05; }
+.flow-reading strong { line-height: 1; }
+.feed-metric strong { line-height: 1.1; }
+.temp-controls { grid-template-columns: 56px minmax(132px, 1fr) 56px; align-items: stretch; }
+.temp-controls > div {
+  min-height: 82px; padding: 10px 8px 9px;
+  grid-template-columns: auto auto; grid-template-rows: 32px 18px;
+  align-items: center; justify-content: center; column-gap: 4px;
+}
+.temp-controls strong { align-self: end; font-size: 27px; line-height: 1; }
+.temp-controls span { align-self: end; font-size: var(--t-sm); line-height: 1.2; }
+.temp-controls small { grid-column: 1 / -1; margin: 3px 0 0; font-size: var(--t-xs); line-height: 1.2; }
+.temp-controls button { min-height: 82px; }
+.feed-trend .temperature-area { fill: url(#temperatureArea); }
+.feed-trend polyline, .feed-trend .trend-point, .feed-trend .trend-pulse { transition: all .75s ease; }
+.feed-trend .trend-pulse {
+  fill: var(--teal-300); stroke: none; opacity: .35;
+  transform-box: fill-box; transform-origin: center; animation: trendPulse 1.8s ease-out infinite;
+}
+.feed-trend .trend-point { fill: var(--teal-700); stroke: var(--surface); stroke-width: 2; }
+.feed-events > div:first-child { animation: eventArrive .38s ease-out; }
+@keyframes trendPulse {
+  0% { transform: scale(.45); opacity: .55; }
+  70%, 100% { transform: scale(1.45); opacity: 0; }
+}
+@keyframes eventArrive {
+  from { opacity: 0; transform: translateY(-5px); background: var(--teal-50); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .feed-trend polyline, .feed-trend .trend-point, .feed-trend .trend-pulse { transition: none; animation: none; }
+  .feed-events > div:first-child { animation: none; }
+}
+
+/* 事件日志使用紧凑时间线，不让少量事件被网格强行拉成大卡片。 */
+.feed-events {
+  align-self: stretch; display: flex; flex-direction: column;
+  gap: 0; margin: 0 0 0 7px; padding-left: 18px; border-left: 2px solid var(--teal-100);
+}
+.feed-events > div {
+  position: relative; display: grid; grid-template-columns: 70px minmax(0, 1fr);
+  align-items: start; gap: 12px; min-height: 0; padding: 12px 4px;
+  border: 0; border-bottom: 1px solid var(--line); border-radius: 0;
+  color: var(--ink-2); background: transparent; font-size: var(--t-sm); line-height: 1.6;
+}
+.feed-events > div:first-child { padding-top: 4px; }
+.feed-events > div:last-child { border-bottom: 0; }
+.feed-events > div::before {
+  content: ''; position: absolute; left: -25.5px; top: 19px;
+  width: 10px; height: 10px; border: 2px solid var(--surface); border-radius: 50%; background: var(--teal-600);
+}
+.feed-events > div:first-child::before { top: 11px; box-shadow: 0 0 0 3px var(--teal-50); }
+.feed-events time { padding-top: 1px; color: var(--ink-4); font-size: var(--t-xs); line-height: 1.6; white-space: nowrap; }
+.feed-events span { min-width: 0; }
+.feed-events-status {
+  display: flex; align-items: center; gap: 9px; margin-top: auto; padding: 12px 14px;
+  border-radius: var(--r); color: var(--ok); background: var(--ok-bg); font-size: var(--t-sm);
+}
+.feed-events-status i { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); animation: statusBreathe 2s ease-in-out infinite; }
+@keyframes statusBreathe { 50% { opacity: .35; transform: scale(.8); } }
+@media (prefers-reduced-motion: reduce) { .feed-events-status i { animation: none; } }
 
 /* 页签上的异常红点：数量无意义（超标就是超标），所以不显示数字 */
 .nav-dot {

@@ -108,7 +108,7 @@ export function ExoskeletonView() {
           <h1 id="exo-page-title">外骨骼助力行走</h1>
           <p className="exo-lead">安全确认、动作示范、逐项完成和今日打卡，都在这一个页面内完成。</p>
           <div className="exo-meta">
-            <span><b>5</b> 个动作</span>
+            <span><b>5</b> 个训练阶段</span>
             {task.durationMin && <span>约 <b>{task.durationMin}</b> 分钟</span>}
           </div>
         </div>
@@ -152,7 +152,7 @@ export function ExoskeletonView() {
         <header className="exo-workspace-head">
           <div>
             <div className="exo-kicker">跟着画面，逐项完成</div>
-            <h2 id="exo-actions-title">5 个训练动作</h2>
+            <h2 id="exo-actions-title">5 个视频训练阶段</h2>
           </div>
           <div className="exo-progress-copy" aria-live="polite">
             <span>当前进度</span>
@@ -175,6 +175,31 @@ export function ExoskeletonView() {
             />
           ))}
         </div>
+
+        <section className="exo-reference" aria-labelledby="exo-reference-title">
+          <div className="exo-reference-media">
+            <video
+              controls
+              playsInline
+              preload="metadata"
+              poster="/exoskeleton/full-training-reference-poster.jpg"
+              src="/exoskeleton/full-training-reference.mp4"
+            >
+              当前浏览器无法播放训练参考视频。
+            </video>
+          </div>
+          <div className="exo-reference-copy">
+            <div className="exo-kicker">真人全程示范 · 约 1 分钟</div>
+            <h3 id="exo-reference-title">先完整观看，再逐项练习</h3>
+            <p>本段包含下肢行走练习和上肢协同动作。播放时请保持声音开启，跟随示范熟悉完整训练流程。</p>
+            <ul className="exo-reference-points">
+              <li><IconPlay size={16} />需要时可暂停、拖动进度或重新观看</li>
+              <li><IconShield size={16} />正式练习时照护人须全程在旁保护</li>
+              <li><IconCheck size={16} />观看后按下方五项核心动作逐项完成</li>
+            </ul>
+            <div className="exo-reference-note">真人视频用于动作参考，不自动评判动作质量。</div>
+          </div>
+        </section>
 
         {viewSession.phase === 'stopped' && (
           <div className="exo-inline-stop" role="alert">
@@ -216,16 +241,26 @@ export function ExoskeletonView() {
                 </header>
 
                 <div className="exo-step-media">
-                  <img
-                    key={`${item.id}-${showMotion ? 'motion' : 'still'}`}
-                    src={showMotion ? item.gifSrc : item.stillSrc}
-                    alt={`${item.title}动作示范`}
-                    onError={() => {
-                      if (!current) return
-                      if (showMotion) setMotionPlaying(false)
-                      else setMediaFailed(true)
-                    }}
-                  />
+                  {showMotion ? (
+                    <video
+                      key={`${item.id}-motion`}
+                      src={item.videoSrc}
+                      poster={item.stillSrc}
+                      autoPlay
+                      muted
+                      playsInline
+                      aria-label={`${item.title}真人动作示范`}
+                      onError={() => setMotionPlaying(false)}
+                      onEnded={() => setMotionPlaying(false)}
+                    />
+                  ) : (
+                    <img
+                      key={`${item.id}-still`}
+                      src={item.stillSrc}
+                      alt={`${item.title}真人动作示范`}
+                      onError={() => { if (current) setMediaFailed(true) }}
+                    />
+                  )}
                   <span className="exo-step-direction" aria-hidden="true">{item.direction}</span>
                   {current && mediaFailed && (
                     <div className="exo-media-fallback">动作示范暂时无法显示，请让照护人协助。</div>
@@ -310,7 +345,7 @@ export function ExoskeletonView() {
             <div className="exo-result-mark"><IconCheck size={38} /></div>
             <div>
               <div className="exo-kicker">今日训练完成</div>
-              <h2 id="exo-finish-title">5 个动作全部完成</h2>
+              <h2 id="exo-finish-title">5 个训练阶段全部完成</h2>
               <p>
                 {syncStatus === 'pending'
                   ? `${patient.name}今天完成得很棒，完成记录正在同步给护理员。`

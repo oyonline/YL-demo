@@ -9,23 +9,23 @@ import { EXOSKELETON_ACTIONS } from '../src/features/exoskeleton/session.ts'
 const projectRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
 
 describe('外骨骼动作素材', () => {
-  it('五个动作各有独立的本地 GIF 和静态降级图', () => {
+  it('五个视频阶段各有独立的本地 MP4 和静态降级图', () => {
     expect(EXOSKELETON_ACTIONS).toHaveLength(5)
     expect(new Set(EXOSKELETON_ACTIONS.map((action) => action.id)).size).toBe(5)
-    expect(new Set(EXOSKELETON_ACTIONS.map((action) => action.gifSrc)).size).toBe(5)
+    expect(new Set(EXOSKELETON_ACTIONS.map((action) => action.videoSrc)).size).toBe(5)
     expect(new Set(EXOSKELETON_ACTIONS.map((action) => action.stillSrc)).size).toBe(5)
 
     for (const action of EXOSKELETON_ACTIONS) {
-      expect(action.gifSrc).toMatch(/^\/exoskeleton\/[a-z-]+\.gif$/)
-      expect(action.stillSrc).toMatch(/^\/exoskeleton\/[a-z-]+\.png$/)
-      expect(action.gifSrc).not.toMatch(/^https?:|^data:|^blob:/)
+      expect(action.videoSrc).toMatch(/^\/exoskeleton\/[a-z0-9-]+\.mp4$/)
+      expect(action.stillSrc).toMatch(/^\/exoskeleton\/[a-z0-9-]+\.jpg$/)
+      expect(action.videoSrc).not.toMatch(/^https?:|^data:|^blob:/)
 
-      const gifPath = join(projectRoot, 'public', action.gifSrc)
+      const videoPath = join(projectRoot, 'public', action.videoSrc)
       const stillPath = join(projectRoot, 'public', action.stillSrc)
-      expect(statSync(gifPath).size).toBeGreaterThan(1_000)
+      expect(statSync(videoPath).size).toBeGreaterThan(1_000)
       expect(statSync(stillPath).size).toBeGreaterThan(1_000)
-      expect(readFileSync(gifPath).subarray(0, 6).toString('ascii')).toMatch(/^GIF8[79]a$/)
-      expect([...readFileSync(stillPath).subarray(0, 8)]).toEqual([137, 80, 78, 71, 13, 10, 26, 10])
+      expect(readFileSync(videoPath).subarray(4, 8).toString('ascii')).toBe('ftyp')
+      expect([...readFileSync(stillPath).subarray(0, 3)]).toEqual([255, 216, 255])
     }
   })
 
@@ -33,9 +33,9 @@ describe('外骨骼动作素材', () => {
     const task = taskDefs.find((item) => item.id === 'task-cognition')
     const reminder = DAILY_REMINDERS.find((item) => item.taskId === 'task-cognition')
 
-    expect(task?.instruction).toContain('蹲起、向前走、后撤一步、向左走、向右走五个动作')
-    expect(task?.reps).toContain('共 5 个动作')
-    expect(reminder?.text).toContain('五个动作')
+    expect(task?.instruction).toContain('踏步、侧步、步态衔接及上肢协同五个阶段')
+    expect(task?.reps).toContain('共 5 个阶段')
+    expect(reminder?.text).toContain('五个训练阶段')
     expect(`${task?.instruction}${task?.reps}${reminder?.text}`).not.toMatch(/四步|资料未提供/)
   })
 })

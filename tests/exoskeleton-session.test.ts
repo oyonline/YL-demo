@@ -13,7 +13,7 @@ function dispatch(state: ExoskeletonSession, type: 'START' | 'ACTION_DONE' | 'CO
 describe('外骨骼五步训练状态机', () => {
   it('动作顺序固定为本轮确认的五项', () => {
     expect(EXOSKELETON_ACTIONS.map((action) => action.title)).toEqual([
-      '蹲起', '向前走', '后撤一步', '向左走', '向右走',
+      '踏步热身', '左右侧步', '步态衔接', '上肢开合配合踏步', '交叉与伸臂协同',
     ])
   })
 

@@ -1,64 +1,64 @@
 export const EXOSKELETON_TASK_ID = 'task-cognition'
 
 export interface ExoskeletonAction {
-  id: 'squat' | 'walk-forward' | 'walk-backward' | 'step-left' | 'step-right'
+  id: 'march-warmup' | 'side-step' | 'walking-transition' | 'arm-step' | 'cross-reach'
   title: string
   shortTitle: string
   direction: string
   instruction: string
-  gifSrc: string
+  videoSrc: string
   stillSrc: string
 }
 
 /**
- * 动作名称与顺序来自本轮已确认需求。
+ * 动作名称、顺序和素材均按真人参考视频的连续时间段整理。
  * 页面只说明动作方向，不生成次数、速度、幅度或质量评分等医疗训练参数。
  */
 export const EXOSKELETON_ACTIONS: readonly ExoskeletonAction[] = [
   {
-    id: 'squat',
-    title: '蹲起',
-    shortTitle: '蹲起',
-    direction: '↕',
-    instruction: '跟随画面完成蹲下与起身。',
-    gifSrc: '/exoskeleton/squat.gif',
-    stillSrc: '/exoskeleton/squat.png',
-  },
-  {
-    id: 'walk-forward',
-    title: '向前走',
-    shortTitle: '向前',
+    id: 'march-warmup',
+    title: '踏步热身',
+    shortTitle: '踏步',
     direction: '↑',
-    instruction: '跟随画面向前行走。',
-    gifSrc: '/exoskeleton/walk-forward.gif',
-    stillSrc: '/exoskeleton/walk-forward.png',
+    instruction: '跟随真人示范交替抬腿踏步，先熟悉下肢动作节奏。',
+    videoSrc: '/exoskeleton/reference-step-1.mp4',
+    stillSrc: '/exoskeleton/reference-step-1.jpg',
   },
   {
-    id: 'walk-backward',
-    title: '后撤一步',
-    shortTitle: '后撤',
-    direction: '↓',
-    instruction: '站稳后向后迈一步，再回到原位。',
-    gifSrc: '/exoskeleton/back-step.gif',
-    stillSrc: '/exoskeleton/back-step.png',
+    id: 'side-step',
+    title: '左右侧步',
+    shortTitle: '侧步',
+    direction: '↔',
+    instruction: '跟随真人示范向左右两侧交替迈步，再回到中间站稳。',
+    videoSrc: '/exoskeleton/reference-step-2.mp4',
+    stillSrc: '/exoskeleton/reference-step-2.jpg',
   },
   {
-    id: 'step-left',
-    title: '向左走',
-    shortTitle: '向左',
-    direction: '←',
-    instruction: '跟随画面向左侧行走。',
-    gifSrc: '/exoskeleton/step-left.gif',
-    stillSrc: '/exoskeleton/step-left.png',
+    id: 'walking-transition',
+    title: '步态衔接',
+    shortTitle: '衔接',
+    direction: '↗',
+    instruction: '继续跟随前半段示范完成移动与踏步衔接，保持动作连贯。',
+    videoSrc: '/exoskeleton/reference-step-3.mp4',
+    stillSrc: '/exoskeleton/reference-step-3.jpg',
   },
   {
-    id: 'step-right',
-    title: '向右走',
-    shortTitle: '向右',
-    direction: '→',
-    instruction: '跟随画面向右侧行走。',
-    gifSrc: '/exoskeleton/step-right.gif',
-    stillSrc: '/exoskeleton/step-right.png',
+    id: 'arm-step',
+    title: '上肢开合配合踏步',
+    shortTitle: '开合',
+    direction: '↔',
+    instruction: '跟随后半段示范，在踏步过程中完成双臂开合配合。',
+    videoSrc: '/exoskeleton/reference-step-4.mp4',
+    stillSrc: '/exoskeleton/reference-step-4.jpg',
+  },
+  {
+    id: 'cross-reach',
+    title: '交叉与伸臂协同',
+    shortTitle: '协同',
+    direction: '×',
+    instruction: '跟随真人示范完成双臂交叉、交替伸臂与抬腿协同动作。',
+    videoSrc: '/exoskeleton/reference-step-5.mp4',
+    stillSrc: '/exoskeleton/reference-step-5.jpg',
   },
 ] as const
 

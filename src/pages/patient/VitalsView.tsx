@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {BP_SAFE, isBpAbnormal} from '../../data/seed'
 import { usePatientData } from '../../data/context'
@@ -17,6 +17,36 @@ import { IconAlert, IconCheck, IconHeart } from '../../components/Icons'
  * 不判断高血压分级，更不建议加药。
  */
 export function VitalsView() {
+  const [tab, setTab] = useState<'blood-pressure' | 'feeding'>('blood-pressure')
+
+  return (
+    <div className="stack">
+      <div className="vitals-tabs" role="tablist" aria-label="健康数据类型">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'blood-pressure'}
+          className="vitals-tab"
+          onClick={() => setTab('blood-pressure')}
+        >
+          血压记录
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'feeding'}
+          className="vitals-tab"
+          onClick={() => setTab('feeding')}
+        >
+          鼻饲液监测
+        </button>
+      </div>
+      {tab === 'blood-pressure' ? <BloodPressurePanel /> : <FeedingMonitor />}
+    </div>
+  )
+}
+
+function BloodPressurePanel() {
   const { patient, therapist } = usePatientData()
   const state = useDemoState()
   const [sys, setSys] = useState('')
@@ -138,4 +168,185 @@ export function VitalsView() {
       </section>
     </div>
   )
+}
+
+function FeedingMonitor() {
+  const { patient } = usePatientData()
+  const [now, setNow] = useState(() => new Date())
+  const [targetTemperature, setTargetTemperature] = useState(38)
+  const [temperature, setTemperature] = useState(38)
+  const [infused, setInfused] = useState(12.5)
+  const [running, setRunning] = useState(true)
+  const [trend, setTrend] = useState(() => Array.from(
+    { length: 60 },
+    (_, i) => 38 + Math.sin(i / 4) * 0.07 + Math.sin(i / 11) * 0.03,
+  ))
+  const [events, setEvents] = useState(() => [
+    { time: formatClock(new Date()), text: '开始鼻饲：水果汁 50mL，流速 10mL/分' },
+    { time: formatClock(new Date()), text: '设备自检完成，温度传感器与恒温夹正常' },
+  ])
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      const tick = new Date()
+      setNow(tick)
+      setTemperature((current) => {
+        const correction = (targetTemperature - current) * 0.2
+        const sensorDrift = (Math.random() - 0.5) * 0.055
+        const next = current + correction + sensorDrift
+        const stable = Math.max(targetTemperature - 0.16, Math.min(targetTemperature + 0.16, next))
+        setTrend((values) => [...values.slice(1), stable])
+        return stable
+      })
+      if (running) setInfused((value) => Math.min(50, value + 1 / 6))
+    }, 1000)
+    return () => window.clearInterval(timer)
+  }, [running, targetTemperature])
+
+  const remaining = Math.max(0, 50 - infused)
+  const temperatureGap = Math.abs(targetTemperature - temperature)
+  const powerPercent = temperatureGap < 0.03 ? 24 : temperatureGap < 0.5 ? 46 : 72
+  const powerWatts = Math.round(powerPercent * 0.25)
+  const temperatureAlert = temperature > 40
+
+  function chooseTemperature(value: number) {
+    setTargetTemperature(value)
+    setEvents((items) => [
+      { time: formatClock(new Date()), text: `设定液温调整为 ${value.toFixed(1)}℃` },
+      ...items,
+    ].slice(0, 4))
+  }
+
+  function toggleRunning() {
+    const nextRunning = !running
+    setRunning(nextRunning)
+    setEvents((items) => [
+      { time: formatClock(new Date()), text: nextRunning ? '鼻饲监测已继续' : '鼻饲监测已暂停' },
+      ...items,
+    ].slice(0, 4))
+  }
+
+  function restart() {
+    setInfused(0)
+    setRunning(true)
+    setEvents((items) => [
+      { time: formatClock(new Date()), text: '重新开始鼻饲：水果汁 50mL' },
+      ...items,
+    ].slice(0, 4))
+  }
+
+  return (
+    <section className="feed-monitor" aria-label="鼻饲液恒温监测">
+      <header className="feed-topbar">
+        <div className="feed-device">
+          <span className="feed-logo" aria-hidden="true">温</span>
+          <span><strong>鼻饲液监测</strong><small>健康数据 · 实时照护</small></span>
+        </div>
+        <div className="feed-patient"><i />患者 <strong>{patient.name}</strong><b>·</b> 水果汁 <strong>50mL</strong></div>
+        <div className="feed-clock"><strong>{formatClock(now)}</strong><small>{formatDate(now)}</small></div>
+      </header>
+
+      <div className="feed-status" data-alert={temperatureAlert}>
+        <span aria-hidden="true">✓</span>
+        {temperatureAlert ? '液温超过 40℃，请立即检查恒温夹' : '系统运行正常，液温恒定，流速稳定'}
+      </div>
+
+      <div className="feed-grid">
+        <section className="feed-panel feed-temperature">
+          <PanelTitle icon="♨" text="液温控制" />
+          <div className="temp-dial" style={{ '--temp-progress': `${((temperature - 38) / 2) * 100}%` } as React.CSSProperties}>
+            <div><strong>{temperature.toFixed(1)}</strong><span>℃</span><small>当前液温</small></div>
+          </div>
+          <div className="temp-setting">设定 <strong>{targetTemperature.toFixed(1)}℃</strong></div>
+          <span className="feed-pill">恒温保持中</span>
+          <div className="temp-controls">
+            <button type="button" onClick={() => chooseTemperature(Math.max(38, targetTemperature - 0.1))} aria-label="降低设定温度">−</button>
+            <div><strong>{targetTemperature.toFixed(1)}</strong><span>℃</span><small>设定温度</small></div>
+            <button type="button" onClick={() => chooseTemperature(Math.min(40, targetTemperature + 0.1))} aria-label="提高设定温度">＋</button>
+          </div>
+          <div className="temp-presets">
+            {[38, 39, 40].map((value) => (
+              <button type="button" key={value} data-active={targetTemperature === value} onClick={() => chooseTemperature(value)}>{value}℃</button>
+            ))}
+          </div>
+          <p>可调范围 <strong>38.0–40.0℃</strong>，超过 40℃ 系统报警</p>
+        </section>
+
+        <section className="feed-panel feed-realtime">
+          <PanelTitle icon="◉" text="实时检查" />
+          <div className="flow-hero">
+            <div className="feed-bag" aria-hidden="true"><span style={{ height: `${remaining * 2}%` }} /></div>
+            <div className="flow-reading"><strong>10</strong><span>mL/分</span><em>流速正常</em></div>
+          </div>
+          <div className="feed-metrics">
+            <Metric label="已输入量" value={infused.toFixed(1)} unit="mL" />
+            <Metric label="剩余液量" value={remaining.toFixed(1)} unit="mL" />
+            <Metric label="恒温夹功率" value={`${powerPercent}%`} unit={`${powerWatts}W`} />
+          </div>
+          <div className="feed-progress">
+            <span>鼻饲进度</span>
+            <div><i style={{ width: `${infused * 2}%` }} /></div>
+            <small><b>总量 50mL</b><b>{infused.toFixed(1)}mL 已完成</b></small>
+          </div>
+          <div className="feed-actions">
+            <span className="feed-pill"><i />{running ? '运行中' : '已暂停'}</span>
+            <button type="button" onClick={toggleRunning}>{running ? '暂停' : '继续'}</button>
+            <button type="button" className="danger" onClick={restart}>重新开始</button>
+          </div>
+        </section>
+
+        <section className="feed-panel feed-side">
+          <PanelTitle icon="⌁" text="液温趋势（近60秒）" />
+          <TemperatureTrend values={trend} setTemperature={targetTemperature} />
+          <div className="trend-legend"><i />实际液温 <i />设定温度</div>
+          <PanelTitle icon="▤" text="事件 / 报警日志" />
+          <div className="feed-events">
+            {events.map((event, index) => <div key={`${event.time}-${index}`}><time>{event.time}</time><span>{event.text}</span></div>)}
+            <p className="feed-events-status"><i />当前无报警，系统持续监测中</p>
+          </div>
+        </section>
+      </div>
+    </section>
+  )
+}
+
+function PanelTitle({ icon, text }: { icon: string; text: string }) {
+  return <h3 className="feed-panel-title"><span aria-hidden="true">{icon}</span>{text}</h3>
+}
+
+function Metric({ label, value, unit }: { label: string; value: string; unit: string }) {
+  return <div className="feed-metric"><span>{label}</span><strong>{value}</strong><small>{unit}</small></div>
+}
+
+function TemperatureTrend({ values, setTemperature }: { values: number[]; setTemperature: number }) {
+  const points = values.map((value, index) => {
+    const x = 8 + (index / Math.max(1, values.length - 1)) * 284
+    const y = 60 - (value - setTemperature) * 230
+    return `${x.toFixed(1)},${Math.max(14, Math.min(106, y)).toFixed(1)}`
+  }).join(' ')
+  const lastY = points.split(' ').at(-1)?.split(',')[1] ?? '60'
+  return (
+    <svg className="feed-trend" viewBox="0 0 300 120" role="img" aria-label="近60秒液温趋势">
+      <defs>
+        <linearGradient id="temperatureArea" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="var(--teal-300)" stopOpacity=".28" />
+          <stop offset="100%" stopColor="var(--teal-300)" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      {[20, 48, 76, 104].map((y) => <line key={y} x1="8" x2="292" y1={y} y2={y} />)}
+      <line className="set-line" x1="8" x2="292" y1="60" y2="60" />
+      <polygon className="temperature-area" points={`8,106 ${points} 292,106`} />
+      <polyline points={points} />
+      <circle className="trend-pulse" cx="292" cy={lastY} r="7" />
+      <circle className="trend-point" cx="292" cy={lastY} r="3.5" />
+    </svg>
+  )
+}
+
+function formatClock(date: Date) {
+  return date.toLocaleTimeString('zh-CN', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
+}
+
+function formatDate(date: Date) {
+  return date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })
 }

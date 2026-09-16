@@ -56,7 +56,7 @@ export const DAILY_REMINDERS: ReminderDef[] = [
     id: 'rm-cognition',
     time: '16:00',
     taskId: 'task-cognition',
-    text: '🦿 16:00 外骨骼助力行走时间到了，请先完成设备与环境检查，再依次完成蹲起、向前走、后撤一步、向左走、向右走五个动作，全程在旁保护。',
+    text: '🦿 16:00 外骨骼助力行走时间到了，请先完成设备与环境检查，再跟随真人视频完成下肢步态与上肢协同五个训练阶段，全程在旁保护。',
   },
   {
     id: 'rm-skin',
