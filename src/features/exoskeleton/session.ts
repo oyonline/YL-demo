@@ -7,6 +7,7 @@ export interface ExoskeletonAction {
   direction: string
   instruction: string
   videoSrc: string
+  animatedSrc?: string
   stillSrc: string
 }
 
@@ -20,9 +21,10 @@ export const EXOSKELETON_ACTIONS: readonly ExoskeletonAction[] = [
     title: '踏步热身',
     shortTitle: '踏步',
     direction: '↑',
-    instruction: '跟随真人示范交替抬腿踏步，先熟悉下肢动作节奏。',
+    instruction: '跟随动态角色交替抬腿踏步，配合节奏完成热身。',
     videoSrc: '/exoskeleton/reference-step-1.mp4',
-    stillSrc: '/exoskeleton/reference-step-1.jpg',
+    animatedSrc: '/exoskeleton/march-game-v2.png',
+    stillSrc: '/exoskeleton/march-game-poster-v2.jpg',
   },
   {
     id: 'side-step',
