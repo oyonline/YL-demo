@@ -23,6 +23,7 @@ describe('数据库迁移', () => {
       '0002_care_alerts.sql',
       '0003_review_audit.sql',
       '0004_exoskeleton_five_actions.sql',
+      '0005_exoskeleton_six_animations.sql',
     ])
   })
 
@@ -45,15 +46,16 @@ describe('数据库迁移', () => {
     db.prepare(`INSERT INTO reminders (id,patient_id,time,text,task_id)
       VALUES ('rm-cognition','p-migration','16:00','旧四步提醒','task-cognition')`).run()
     db.prepare("DELETE FROM schema_migrations WHERE name = '0004_exoskeleton_five_actions.sql'").run()
+    db.prepare("DELETE FROM schema_migrations WHERE name = '0005_exoskeleton_six_animations.sql'").run()
 
     closeDb()
     const migrated = getDb()
     const task = migrated.prepare("SELECT instruction, reps FROM task_defs WHERE id = 'task-cognition'").get() as any
     const reminder = migrated.prepare("SELECT text FROM reminders WHERE id = 'rm-cognition'").get() as any
 
-    expect(task.instruction).toContain('蹲起、向前走、后撤一步、向左走、向右走五个动作')
-    expect(task.reps).toContain('共 5 个动作')
-    expect(reminder.text).toContain('五个动作')
+    expect(task.reps).toContain('共 6 个阶段')
+    expect(task.instruction).toContain('跟随动态图')
+    expect(reminder.text).toContain('六个训练阶段')
     expect(`${task.instruction}${task.reps}${reminder.text}`).not.toContain('四步')
   })
 

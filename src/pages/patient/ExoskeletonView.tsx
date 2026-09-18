@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { IconAlert, IconCheck, IconHome, IconPlay, IconShield } from '../../components/Icons'
 import { usePatientData } from '../../data/context'
@@ -25,12 +25,12 @@ export function ExoskeletonView() {
   const [guardianReady, setGuardianReady] = useState(false)
   const prefersReducedMotion = usePrefersReducedMotion()
   const [motionPlaying, setMotionPlaying] = useState(() => !prefersReducedMotion)
-  const [mediaFailed, setMediaFailed] = useState(false)
+  const [failedMotionIds, setFailedMotionIds] = useState<Set<string>>(() => new Set())
   const [syncStatus, setSyncStatus] = useState<SyncStatus>(alreadyComplete ? 'success' : 'idle')
   const submittedRef = useRef(alreadyComplete)
   const mountedRef = useRef(true)
   const actionButtonRefs = useRef<Array<HTMLButtonElement | null>>([])
-  // 仅在尚未开练时接受外部完成态。训练中的本地流程优先，避免第 5 次
+  // 仅在尚未开练时接受外部完成态。训练中的本地流程优先，避免最后一次
   // 打卡的同步回流抢先盖掉最后一项的原地胜利反馈。
   const viewSession = alreadyComplete && session.phase === 'ready'
     ? createExoskeletonSession(true)
@@ -48,9 +48,9 @@ export function ExoskeletonView() {
     if (viewSession.phase !== 'celebrating' || finishedAllActions) return
     const timer = window.setTimeout(() => {
       setMotionPlaying(!prefersReducedMotion)
-      setMediaFailed(false)
+      setFailedMotionIds(new Set())
       setSession((current) => transitionExoskeletonSession(current, { type: 'CONTINUE' }).state)
-    }, 2100)
+    }, 3000)
     return () => window.clearTimeout(timer)
   }, [finishedAllActions, prefersReducedMotion, viewSession.actionIndex, viewSession.phase])
 
@@ -105,26 +105,73 @@ export function ExoskeletonView() {
 
   function startTraining() {
     setMotionPlaying(!prefersReducedMotion)
-    setMediaFailed(false)
+    setFailedMotionIds(new Set())
     send({ type: 'START' })
   }
 
   return (
     <div className="exo-view exo-onepage">
+      {viewSession.phase === 'celebrating' && (
+        <div className="exo-screen-celebration" role="status" aria-live="assertive">
+          <div className="exo-screen-confetti" aria-hidden="true">
+            {Array.from({ length: 96 }, (_, piece) => (
+              <i
+                key={piece}
+                style={{
+                  '--confetti-x': piece % 2 === 0 ? '11vw' : '89vw',
+                  '--confetti-y': `${78 + (piece % 5) * 2}vh`,
+                  '--confetti-delay': `${(piece % 12) * 0.035}s`,
+                  '--confetti-burst-x': `${(piece % 2 === 0 ? 1 : -1) * (8 + (piece * 13) % 58)}vw`,
+                  '--confetti-burst-y': `${-(22 + (piece * 17) % 58)}vh`,
+                  '--confetti-turn': `${540 + (piece % 5) * 135}deg`,
+                } as CSSProperties}
+              />
+            ))}
+          </div>
+          {(['is-left', 'is-right'] as const).map((side) => (
+            <span className={`exo-side-spray ${side}`} aria-hidden="true" key={side}>
+              {Array.from({ length: 18 }, (_, piece) => (
+                <i
+                  key={piece}
+                  style={{
+                    '--spray-x': `${6 + (piece % 9) * 3.6}vw`,
+                    '--spray-y': `${-(25 + (piece * 7) % 20)}vh`,
+                    '--spray-delay': `${(piece % 6) * 0.045}s`,
+                  } as CSSProperties}
+                />
+              ))}
+            </span>
+          ))}
+          <span className="exo-party-cannon is-left" aria-hidden="true"><i /><b /><em /></span>
+          <span className="exo-party-cannon is-right" aria-hidden="true"><i /><b /><em /></span>
+          <div className="exo-screen-praise">
+            <span className="exo-praise-rays" aria-hidden="true" />
+            <span className="exo-praise-thumb" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M7.5 10.2 11.2 3c.6-1.1 2.3-.7 2.3.6v4h4.6c1.8 0 3.1 1.7 2.6 3.4l-1.9 7.2a2.7 2.7 0 0 1-2.6 2H7.5v-10Z" />
+                <path d="M3.2 10.2h4.3v10H3.2a1.4 1.4 0 0 1-1.4-1.4v-7.2a1.4 1.4 0 0 1 1.4-1.4Z" />
+              </svg>
+            </span>
+            <span className="exo-praise-kicker">完成一项挑战</span>
+            <strong>太棒了！做得真好！</strong>
+            <span>继续保持，你正在一步步变得更棒</span>
+          </div>
+        </div>
+      )}
       <section className="exo-overview" aria-labelledby="exo-page-title">
         <div className="exo-overview-copy">
           <div className="exo-kicker">今日训练 · {task.scheduledTime}</div>
           <h1 id="exo-page-title">外骨骼助力行走</h1>
           <p className="exo-lead">训练包含下肢步态与上肢协同动作；完成安全确认后，跟随下方画面逐项练习并打卡。</p>
           <div className="exo-meta">
-            <span><b>5</b> 个训练阶段</span>
+            <span><b>{EXOSKELETON_ACTIONS.length}</b> 个训练阶段</span>
             {task.durationMin && <span>约 <b>{task.durationMin}</b> 分钟</span>}
             <span>照护人全程陪同</span>
           </div>
         </div>
 
         <div className="exo-overview-score" data-complete={finishedAllActions}>
-          <strong className="num">{viewSession.completedCount}<small> / 5</small></strong>
+          <strong className="num">{viewSession.completedCount}<small> / {EXOSKELETON_ACTIONS.length}</small></strong>
           <span>{finishedAllActions ? '今日训练已完成' : '动作完成进度'}</span>
         </div>
 
@@ -162,7 +209,7 @@ export function ExoskeletonView() {
         <header className="exo-workspace-head">
           <div>
             <div className="exo-kicker">跟着画面，逐项完成</div>
-            <h2 id="exo-actions-title">5 个训练阶段</h2>
+            <h2 id="exo-actions-title">{EXOSKELETON_ACTIONS.length} 个训练阶段</h2>
           </div>
           <div className="exo-progress-copy" aria-live="polite">
             <span>当前进度</span>
@@ -203,9 +250,13 @@ export function ExoskeletonView() {
             const current = viewSession.phase === 'training' && index === viewSession.actionIndex
             const celebrating = viewSession.phase === 'celebrating' && index === viewSession.actionIndex
             const stoppedHere = viewSession.phase === 'stopped' && index === viewSession.actionIndex
-            const showMotion = Boolean(item.animatedSrc)
-              ? motionPlaying && !prefersReducedMotion && !mediaFailed
-              : (current || celebrating) && motionPlaying && !prefersReducedMotion && !mediaFailed
+            const isPreviewAction = viewSession.phase === 'ready' && index === 0
+            const isFocusedAction = isPreviewAction || current || celebrating
+            const motionFailed = failedMotionIds.has(item.id)
+            const showMotion = isFocusedAction && motionPlaying && !prefersReducedMotion && !motionFailed
+            const imageClassName = item.id === 'march-warmup'
+              ? 'exo-step-image'
+              : 'exo-step-image is-scale-matched'
             const status = done
               ? (celebrating ? '刚刚完成' : '已完成')
               : current
@@ -222,20 +273,23 @@ export function ExoskeletonView() {
               >
                 <header className="exo-step-head">
                   <span className="exo-step-number num">{String(index + 1).padStart(2, '0')}</span>
-                  <span className="exo-step-status" data-state={done ? 'done' : current ? 'current' : stoppedHere ? 'stopped' : 'waiting'}>
-                    {done && <IconCheck size={13} />}{status}
-                  </span>
+                  {!done && (
+                    <span className="exo-step-status" data-state={current ? 'current' : stoppedHere ? 'stopped' : 'waiting'}>
+                      {status}
+                    </span>
+                  )}
                 </header>
 
                 <div className="exo-step-media">
                   {showMotion && item.animatedSrc ? (
                     <img
                       key={`${item.id}-game-motion`}
+                      className={imageClassName}
                       src={item.animatedSrc}
                       alt={`${item.title}游戏化动态示范`}
-                      onError={() => setMediaFailed(true)}
+                      onError={() => setFailedMotionIds((currentIds) => new Set(currentIds).add(item.id))}
                     />
-                  ) : showMotion ? (
+                  ) : showMotion && item.videoSrc ? (
                     <video
                       key={`${item.id}-motion`}
                       src={item.videoSrc}
@@ -250,18 +304,15 @@ export function ExoskeletonView() {
                   ) : (
                     <img
                       key={`${item.id}-still`}
+                      className={imageClassName}
                       src={item.stillSrc}
-                      alt={`${item.title}真人动作示范`}
-                      onError={() => { if (current) setMediaFailed(true) }}
+                      alt={`${item.title}动作定格示范`}
                     />
                   )}
                   {item.animatedSrc && (
-                    <span className="exo-game-badge"><b>✦</b> 节奏跟练 · 样例</span>
+                    <span className="exo-game-badge"><b>✦</b> 节奏跟练</span>
                   )}
                   <span className="exo-step-direction" aria-hidden="true">{item.direction}</span>
-                  {current && mediaFailed && (
-                    <div className="exo-media-fallback">动作示范暂时无法显示，请让照护人协助。</div>
-                  )}
                 </div>
 
                 <div className="exo-step-body">
@@ -274,7 +325,7 @@ export function ExoskeletonView() {
                       <button
                         className="exo-motion-toggle"
                         onClick={() => setMotionPlaying((playing) => !playing)}
-                        disabled={prefersReducedMotion || mediaFailed}
+                        disabled={prefersReducedMotion || motionFailed}
                         aria-label={showMotion ? `暂停${item.title}动作示范` : `播放${item.title}动作示范`}
                       >
                         {showMotion
@@ -351,7 +402,7 @@ export function ExoskeletonView() {
             <div className="exo-result-mark"><IconCheck size={38} /></div>
             <div>
               <div className="exo-kicker">今日训练完成</div>
-              <h2 id="exo-finish-title">5 个训练阶段全部完成</h2>
+              <h2 id="exo-finish-title">{EXOSKELETON_ACTIONS.length} 个训练阶段全部完成</h2>
               <p>
                 {syncStatus === 'pending'
                   ? `${patient.name}今天完成得很棒，完成记录正在同步给护理员。`

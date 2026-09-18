@@ -1,12 +1,12 @@
 export const EXOSKELETON_TASK_ID = 'task-cognition'
 
 export interface ExoskeletonAction {
-  id: 'march-warmup' | 'side-step' | 'walking-transition' | 'arm-step' | 'cross-reach'
+  id: 'march-warmup' | 'side-step' | 'walking-transition' | 'arm-step' | 'arm-cross' | 'reach-march'
   title: string
   shortTitle: string
   direction: string
   instruction: string
-  videoSrc: string
+  videoSrc?: string
   animatedSrc?: string
   stillSrc: string
 }
@@ -22,45 +22,53 @@ export const EXOSKELETON_ACTIONS: readonly ExoskeletonAction[] = [
     shortTitle: '踏步',
     direction: '↑',
     instruction: '跟随动态角色交替抬腿踏步，配合节奏完成热身。',
-    videoSrc: '/exoskeleton/reference-step-1.mp4',
-    animatedSrc: '/exoskeleton/march-game-v2.png',
-    stillSrc: '/exoskeleton/march-game-poster-v2.jpg',
+    animatedSrc: '/exoskeleton/march-game-v3.png',
+    stillSrc: '/exoskeleton/march-game-poster-v3.jpg',
   },
   {
     id: 'side-step',
     title: '左右侧步',
     shortTitle: '侧步',
     direction: '↔',
-    instruction: '跟随真人示范向左右两侧交替迈步，再回到中间站稳。',
-    videoSrc: '/exoskeleton/reference-step-2.mp4',
-    stillSrc: '/exoskeleton/reference-step-2.jpg',
+    instruction: '跟随动态角色向左右两侧交替迈步，再回到中间站稳。',
+    animatedSrc: '/exoskeleton/side-step-v9.png',
+    stillSrc: '/exoskeleton/side-step-poster-v9.jpg',
   },
   {
     id: 'walking-transition',
     title: '步态衔接',
     shortTitle: '衔接',
     direction: '↗',
-    instruction: '继续跟随前半段示范完成移动与踏步衔接，保持动作连贯。',
-    videoSrc: '/exoskeleton/reference-step-3.mp4',
-    stillSrc: '/exoskeleton/reference-step-3.jpg',
+    instruction: '跟随动态角色完成移动与踏步衔接，保持动作连贯。',
+    animatedSrc: '/exoskeleton/gait-transition-v1.png',
+    stillSrc: '/exoskeleton/gait-transition-poster-v1.jpg',
   },
   {
     id: 'arm-step',
     title: '上肢开合配合踏步',
     shortTitle: '开合',
     direction: '↔',
-    instruction: '跟随后半段示范，在踏步过程中完成双臂开合配合。',
-    videoSrc: '/exoskeleton/reference-step-4.mp4',
-    stillSrc: '/exoskeleton/reference-step-4.jpg',
+    instruction: '跟随动态角色，在踏步过程中完成双臂开合配合。',
+    animatedSrc: '/exoskeleton/arm-open-v1.png',
+    stillSrc: '/exoskeleton/arm-open-poster-v1.jpg',
   },
   {
-    id: 'cross-reach',
-    title: '交叉与伸臂协同',
-    shortTitle: '协同',
+    id: 'arm-cross',
+    title: '双臂交叉',
+    shortTitle: '交叉',
     direction: '×',
-    instruction: '跟随真人示范完成双臂交叉、交替伸臂与抬腿协同动作。',
-    videoSrc: '/exoskeleton/reference-step-5.mp4',
-    stillSrc: '/exoskeleton/reference-step-5.jpg',
+    instruction: '保持双脚站稳，跟随动态角色完成双臂抬起、胸前交叉、打开并放下。',
+    animatedSrc: '/exoskeleton/arm-cross-v1.png',
+    stillSrc: '/exoskeleton/arm-cross-poster-v1.jpg',
+  },
+  {
+    id: 'reach-march',
+    title: '交替伸臂配合抬腿',
+    shortTitle: '伸臂',
+    direction: '↗',
+    instruction: '跟随动态角色交替向前伸臂并抬腿，完成上下肢协同练习。',
+    animatedSrc: '/exoskeleton/reach-march-v1.png',
+    stillSrc: '/exoskeleton/reach-march-poster-v1.jpg',
   },
 ] as const
 
@@ -102,7 +110,7 @@ export function createExoskeletonSession(alreadyComplete = false): ExoskeletonSe
  * 纯状态转换供页面和测试共用：
  * - GIF 播放本身不会推进进度；
  * - 每次 ACTION_DONE 只进入一次完成提示；
- * - 第 5 次点击“我完成了”时才产生打卡副作用。
+ * - 最后一次点击“我完成了”时才产生打卡副作用。
  */
 export function transitionExoskeletonSession(
   current: ExoskeletonSession,
