@@ -1,32 +1,59 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {SUPPORT_PHONE, toISODate} from '../../data/seed'
 import { usePatientData, useContent } from '../../data/context'
 import { createEscalation, effectiveStatus, markAllGuidanceRead, setCheckIn, todayCheckIns, useDemoState } from '../../store/store'
-import { IconActivity, IconAlert, IconCheck, IconClock, IconHeart, IconPill, IconPlay, IconShield } from '../../components/Icons'
+import { IconActivity, IconAlert, IconCalendar, IconCheck, IconChevron, IconClock, IconHeart, IconPill, IconPlay, IconShield } from '../../components/Icons'
 import { Lines } from '../../components/Lines'
 import { HomeEntries } from './HomeEntries'
 import { EXOSKELETON_TASK_ID } from '../../features/exoskeleton/session'
 
 export function TodayView() {
-  const { patient, taskDefs, therapist } = usePatientData()
+  const { patient, taskDefs, therapist, homecareStart } = usePatientData()
   const { videos } = useContent()
   const nav = useNavigate()
   const state = useDemoState()
   const today = toISODate(new Date())
-  const rows = todayCheckIns(state, taskDefs, today).map((r) => ({ ...r, status: effectiveStatus(r.task, r.checkIn) }))
+  const [selectedDate, setSelectedDate] = useState(today)
   const [troubleFor, setTroubleFor] = useState<string | null>(null)
   const [note, setNote] = useState('')
   const [showAllMsgs, setShowAllMsgs] = useState(false)
+  const [datePickerOpen, setDatePickerOpen] = useState(false)
+  const selectedParts = selectedDate.split('-').map(Number)
+  const [calendarView, setCalendarView] = useState({ y: selectedParts[0], m: selectedParts[1] - 1 })
+  const datePickerRef = useRef<HTMLDivElement>(null)
+
+  const isToday = selectedDate === today
+  const isFuture = selectedDate > today
+  const isPast = selectedDate < today
+  const selectedCheckIns = todayCheckIns(state, taskDefs, selectedDate)
+  const selectedHasRecord = selectedCheckIns.some((r) => r.checkIn)
+  const selectedRows = isPast && !selectedHasRecord
+    ? []
+    : selectedCheckIns.map((r) => ({
+        ...r,
+        status: isToday ? effectiveStatus(r.task, r.checkIn) : isFuture ? 'planned' as const : r.checkIn?.status ?? 'missed',
+      }))
+  const todayRows = todayCheckIns(state, taskDefs, today).map((r) => ({ ...r, status: effectiveStatus(r.task, r.checkIn) }))
 
   // 打开今日页即视为看过康复师的留言，康复师端据此显示"家属已读"
   useEffect(() => { markAllGuidanceRead() }, [state.guidances.length])
 
-  const total = rows.length
+  useEffect(() => {
+    if (!datePickerOpen) return
+    function closeOnOutsideClick(event: MouseEvent) {
+      if (!datePickerRef.current?.contains(event.target as Node)) setDatePickerOpen(false)
+    }
+    document.addEventListener('mousedown', closeOnOutsideClick)
+    return () => document.removeEventListener('mousedown', closeOnOutsideClick)
+  }, [datePickerOpen])
+
+  const total = todayRows.length
   const hasPlan = total > 0
-  const done = rows.filter((r) => r.status === 'done').length
+  const done = todayRows.filter((r) => r.status === 'done').length
   const remaining = total - done
-  const next = rows.find((r) => r.status === 'pending')
+  const next = todayRows.find((r) => r.status === 'pending')
+  const selectedDone = selectedRows.filter((r) => r.status === 'done').length
   const guidances = [...state.guidances].reverse()
 
   function submitTrouble(taskId: string, title: string) {
@@ -104,27 +131,77 @@ export function TodayView() {
       <section className="card card-pad">
         <div className="card-hd">
           <div>
-            <div className="eyebrow">今日安排</div>
-            <h2 className="card-title">{hasPlan ? '按护理员制定的计划执行' : '尚未制定康复计划'}</h2>
+            <div className="schedule-date-line">
+              <div className="eyebrow">{formatChineseDate(selectedDate)}</div>
+              <div className="schedule-date-control" ref={datePickerRef}>
+                <button
+                  type="button"
+                  className="schedule-date-picker"
+                  aria-expanded={datePickerOpen}
+                  onClick={() => {
+                    setCalendarView({ y: selectedParts[0], m: selectedParts[1] - 1 })
+                    setDatePickerOpen((open) => !open)
+                  }}
+                >
+                  <IconCalendar size={14} />
+                  <span>选择日期</span>
+                </button>
+                {datePickerOpen && (
+                  <ScheduleCalendar
+                    view={calendarView}
+                    selected={selectedDate}
+                    today={today}
+                    min={homecareStart}
+                    onViewChange={setCalendarView}
+                    onSelect={(date) => {
+                      setSelectedDate(date)
+                      setTroubleFor(null)
+                      setNote('')
+                      setDatePickerOpen(false)
+                    }}
+                  />
+                )}
+              </div>
+              {!isToday && (
+                <button className="schedule-today" onClick={() => setSelectedDate(today)}>回到今天</button>
+              )}
+            </div>
+            <h2 className="card-title">
+              {!hasPlan
+                ? '尚未制定康复计划'
+                : isFuture
+                  ? '查看护理员制定的计划'
+                  : isPast
+                    ? '查看当日执行记录'
+                    : '按护理员制定的计划执行'}
+            </h2>
           </div>
           <span style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             <Link to="/patient/videos" className="card-note" style={{ color: 'var(--green-700)', fontWeight: 550 }}>
               全部训练视频
             </Link>
-            <span className="chip chip-brand num">{hasPlan ? `${done} / ${total}` : '待制定'}</span>
+            <span className="chip chip-brand num">
+              {!hasPlan ? '待制定' : isFuture ? `计划 ${taskDefs.length} 项` : isPast && !selectedHasRecord ? '无记录' : `${selectedDone} / ${taskDefs.length}`}
+            </span>
           </span>
         </div>
 
         <div className="timeline">
           {!hasPlan && (
             <div className="empty-chat">
-              <div className="big">暂无今日安排</div>
+              <div className="big">暂无安排</div>
               <div>护理员完成评估并制定计划后，训练和提醒会自动出现在这里。</div>
             </div>
           )}
-          {rows.map(({ task, checkIn, status }) => {
+          {hasPlan && isPast && !selectedHasRecord && (
+            <div className="empty-chat">
+              <div className="big">当日暂无打卡记录</div>
+              <div>这一天没有留下任务执行记录，可选择其他日期继续查看。</div>
+            </div>
+          )}
+          {selectedRows.map(({ task, checkIn, status }) => {
             const isDone = status === 'done'
-            const isNext = next?.task.id === task.id
+            const isNext = isToday && next?.task.id === task.id
             const video = task.videoId ? videos.find((v) => v.id === task.videoId) : undefined
             // 主操作按任务性质区分：服药是终态确认，训练要先看示范再打卡
             const main = task.id === EXOSKELETON_TASK_ID
@@ -178,10 +255,13 @@ export function TodayView() {
                     {status === 'pending' && (isNext
                       ? <span className="chip chip-wait"><IconClock size={11} /> 即将开始</span>
                       : <span className="chip">未开始</span>)}
+                    {status === 'planned' && <span className="chip chip-brand"><IconCalendar size={11} /> 待进行</span>}
                   </div>
 
                   <div className="tl-actions">
-                    {isDone ? (
+                    {!isToday ? (
+                      <span className="card-note">仅查看</span>
+                    ) : isDone ? (
                       <button className="btn-quiet" onClick={() => setCheckIn(task.id, 'pending')}>撤销</button>
                     ) : (
                       <>
@@ -195,7 +275,7 @@ export function TodayView() {
                   </div>
                 </div>
 
-                {troubleFor === task.id && (
+                {isToday && troubleFor === task.id && (
                   <div className="trouble">
                     <div className="trouble-t">遇到什么困难？会连同她的档案一起转给 {therapist.name}</div>
                     <textarea
@@ -225,6 +305,82 @@ export function TodayView() {
         </div>
       </section>
 
+    </div>
+  )
+}
+
+function formatChineseDate(dateKey: string) {
+  const [year, month, day] = dateKey.split('-').map(Number)
+  const weekday = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'][new Date(year, month - 1, day).getDay()]
+  return `${year}年${month}月${day}日 ${weekday}`
+}
+
+const CALENDAR_WEEK = ['日', '一', '二', '三', '四', '五', '六']
+
+function ScheduleCalendar({
+  view,
+  selected,
+  today,
+  min,
+  onViewChange,
+  onSelect,
+}: {
+  view: { y: number; m: number }
+  selected: string
+  today: string
+  min: string
+  onViewChange: (view: { y: number; m: number }) => void
+  onSelect: (date: string) => void
+}) {
+  const firstWeekday = new Date(view.y, view.m, 1).getDay()
+  const dayCount = new Date(view.y, view.m + 1, 0).getDate()
+  const minDate = new Date(`${min}T00:00:00`)
+  const minMonth = minDate.getFullYear() * 12 + minDate.getMonth()
+  const viewMonth = view.y * 12 + view.m
+
+  function stepMonth(delta: number) {
+    const next = viewMonth + delta
+    onViewChange({ y: Math.floor(next / 12), m: next % 12 })
+  }
+
+  return (
+    <div className="schedule-calendar" role="dialog" aria-label="选择安排日期">
+      <div className="schedule-calendar-head">
+        <button type="button" onClick={() => stepMonth(-1)} disabled={viewMonth <= minMonth} aria-label="上个月">
+          <span><IconChevron size={14} /></span>
+        </button>
+        <strong className="num">{view.y} 年 {view.m + 1} 月</strong>
+        <button type="button" onClick={() => stepMonth(1)} aria-label="下个月">
+          <IconChevron size={14} />
+        </button>
+      </div>
+      <div className="schedule-calendar-week">{CALENDAR_WEEK.map((day) => <span key={day}>{day}</span>)}</div>
+      <div className="schedule-calendar-grid">
+        {Array.from({ length: firstWeekday }, (_, index) => <span key={`blank-${index}`} />)}
+        {Array.from({ length: dayCount }, (_, index) => {
+          const day = index + 1
+          const key = toISODate(new Date(view.y, view.m, day))
+          const disabled = key < min
+          return (
+            <button
+              type="button"
+              key={key}
+              className="num"
+              data-selected={key === selected}
+              data-today={key === today}
+              disabled={disabled}
+              aria-label={`${view.y}年${view.m + 1}月${day}日`}
+              onClick={() => onSelect(key)}
+            >
+              {day}
+            </button>
+          )
+        })}
+      </div>
+      <div className="schedule-calendar-foot">
+        <span><i />今天</span>
+        <button type="button" onClick={() => onSelect(today)}>回到今天</button>
+      </div>
     </div>
   )
 }
