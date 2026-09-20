@@ -25,6 +25,7 @@ describe('数据库迁移', () => {
       '0004_exoskeleton_five_actions.sql',
       '0005_exoskeleton_six_animations.sql',
       '0006_monthly_diet_guidance.sql',
+      '0007_replace_preset_qa_with_enteral_three.sql',
     ])
   })
 

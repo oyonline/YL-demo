@@ -9,17 +9,12 @@ import { createHash } from 'crypto'
  */
 export const APPROVAL_RECORDED_AT = '2026-09-14T02:45:00.000Z'
 export const GUIDANCE_APPROVAL_RECORDED_AT = '2026-09-20T07:25:00.000Z'
+export const PRESET_QA_APPROVAL_RECORDED_AT = '2026-09-20T08:45:00.000Z'
 
 export const APPROVED_PRESET_QA: Readonly<Record<string, string>> = {
-  choking: '582059b3197e6f592630bbbed6740242993b40f349f00a96b69816f83ac50050',
-  'too-tired': 'ab2c6d72990101ed2c48f75eae178d4eaf198348208220c702e9e0ff63291f94',
-  'bp-high': '1a8a3bb64700621d36f093ee97d7efa0967d2fcb5f423b3a3e7e9fa6ec86119a',
-  'sore-legs': 'e5b15c230b30786a54c85535c8fb270a18e9d18a340c629e4510366e96423747',
-  meals: '30f95180e0c1accab2c6a33a96210a077127298875b80f37609578fcff807925',
-  'hypertensive-crisis': '0f45119b74b670654414c1776428a6b75b4194bb1a3bc54195077e87353829ec',
-  'tube-medication': '82cf915ef4daf9d04036c94d38921ff1559437b52906b625573ada58072ca1e6',
-  'limb-rehab': '6a8fcec5021ec29b1796c5ddd5a4ff1f01d32da0078bdd31da71daf21de35e04',
-  'ng-tube-change': 'a1e13ebc05c001a1ae0593ab67e3075862a3b166919a3da1b3931d924f8575fc',
+  'tube-bloating': '55e50049acc7016bb44dadb8c3dd49ec90322b1134ec28f3b7327aa9b4a0449c',
+  'tube-aspiration': '183c0e69c72350d9e538225f466d09cf2427a479818dacf1b99ab38442648b3a',
+  'millet-pumpkin-porridge': '91ee2b1c9725a07502b8d12fb527ec719d3dc6b4d4e4c1eed03d3a930d28fda1',
 }
 
 export const APPROVED_GUIDANCE: Readonly<Record<string, string>> = {

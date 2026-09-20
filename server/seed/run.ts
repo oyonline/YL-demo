@@ -25,6 +25,7 @@ import { DAILY_REMINDERS } from '../../src/data/reminders.ts'
 import {
   APPROVAL_RECORDED_AT,
   GUIDANCE_APPROVAL_RECORDED_AT,
+  PRESET_QA_APPROVAL_RECORDED_AT,
   APPROVED_GUIDANCE,
   APPROVED_KB_DOCUMENTS,
   APPROVED_PRESET_QA,
@@ -211,8 +212,8 @@ const seed = db.transaction(() => {
     VALUES (?,?,?,?,?,?,?,'team_reviewed',?,?,?)`)
   PRESET_QA.forEach((q, i) => {
     const approved = isApprovedVersion(APPROVED_PRESET_QA, q.id, hashApprovedContent(q))
-    insQA.run(q.id, q.question, J(q.basis), J(q.external), J(q.answer), q.escalate ? 1 : 0,
-      q.escalateHint ?? null, approved ? 'approved' : 'pending', approved ? APPROVAL_RECORDED_AT : null, i)
+    insQA.run(q.id, q.question, J(q.basis), J(q.external ?? []), J(q.answer), q.escalate ? 1 : 0,
+      q.escalateHint ?? null, approved ? 'approved' : 'pending', approved ? PRESET_QA_APPROVAL_RECORDED_AT : null, i)
     if (approved) recordManifestApproval('preset_qa', q.id)
   })
 

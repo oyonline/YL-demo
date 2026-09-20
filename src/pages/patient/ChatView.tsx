@@ -9,6 +9,8 @@ import { IconChat, IconSend, IconUser } from '../../components/Icons'
 import { InlineRich } from '../../components/RichText'
 import { ThinkingTrace, useTypewriter, type TraceStep } from '../../components/ThinkingTrace'
 
+const INTERNAL_BASIS_LABELS = new Set(['用户确认的内置问答原文'])
+
 function StreamingBody({ text, onDone }: { text: string; onDone: () => void }) {
   const shown = useTypewriter(text, true, onDone)
   const lines = shown.split('\n')
@@ -69,6 +71,17 @@ function StreamingText({ text }: { text: string }) {
 /** 气泡里按行成段；行内加粗交给共用组件 */
 function RichText({ text }: { text: string }) {
   return <p><InlineRich text={text} /></p>
+}
+
+function PresetAnswerBody({ text }: { text: string }) {
+  const paragraphs = text
+    .replace(/(如下：)(1\.\s)/, '$1\n$2')
+    .replace(/([；。])(\d+\.\s)/g, '$1\n$2')
+    .replace(/(。)(发生腹胀后)/, '$1\n$2')
+    .replace(/(；)(急救措施：)/, '$1\n$2')
+    .split('\n')
+
+  return <>{paragraphs.map((paragraph, index) => <RichText key={index} text={paragraph} />)}</>
 }
 
 /** 知识库命中项 —— 与 /api/kb/search 的返回对齐 */
@@ -420,6 +433,7 @@ export function ChatView() {
           const isTherapist = m.role === 'therapist'
           const q = PRESET_QA.find((x) => x.answer.join('\n') === m.text)
           const hint = q?.escalateHint ?? FALLBACK_ANSWER.escalateHint
+          const visibleBasis = m.basis?.filter((item) => !INTERNAL_BASIS_LABELS.has(item)) ?? []
           return (
             <div className="bub-row" data-me={isMe} key={m.id}>
               {/* 必须一眼分清 AI 与康复师：产品主张是 AI 不取代专业人员，
@@ -429,7 +443,7 @@ export function ChatView() {
                   {isTherapist ? therapist.name[0] : <IconChat size={17} />}
                 </span>
               )}
-              <div className={`bub ${isMe ? 'bub-me' : isTherapist ? 'bub-th' : 'bub-ai'}`}>
+              <div className={`bub ${isMe ? 'bub-me' : isTherapist ? 'bub-th' : 'bub-ai'}${q ? ' bub-preset' : ''}`}>
                 {!isMe && (
                   <div className="bub-who">
                     {isTherapist
@@ -455,12 +469,14 @@ export function ChatView() {
                   </div>
                 ) : m.id === streamingId
                   ? <StreamingBody text={m.text} onDone={() => setStreamingId(null)} />
-                  : m.text.split('\n').map((line, i) => <RichText key={i} text={line} />)}
+                  : q
+                    ? <PresetAnswerBody text={m.text} />
+                    : m.text.split('\n').map((line, i) => <RichText key={i} text={line} />)}
 
-                {!isMe && m.basis && m.id !== streamingId && (
+                {!isMe && Boolean(visibleBasis?.length) && m.id !== streamingId && (
                   <div className="basis">
                     <b>依据</b>
-                    {m.basis.map((b) => <span className="chip" key={b} style={{ padding: '2px 9px' }}>{b}</span>)}
+                    {visibleBasis.map((b) => <span className="chip" key={b} style={{ padding: '2px 9px' }}>{b}</span>)}
                   </div>
                 )}
 

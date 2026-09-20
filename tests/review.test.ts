@@ -23,7 +23,7 @@ const deliveredVideoSteps = () =>
 
 describe('审核驳回后停止下发', () => {
   it('种子内容默认已通过审核并可下发', () => {
-    expect(deliveredQA()).toHaveLength(9)
+    expect(deliveredQA()).toHaveLength(3)
     expect(deliveredGuidance()).toHaveLength(5)
     expect(getDb().prepare(`SELECT count(*) c FROM preset_qa WHERE review_status='pending'`).get()).toMatchObject({ c: 0 })
     expect(getDb().prepare(`SELECT count(*) c FROM guidance_articles WHERE review_status='pending'`).get()).toMatchObject({ c: 0 })
@@ -32,7 +32,7 @@ describe('审核驳回后停止下发', () => {
     expect(getDb().prepare(`SELECT count(*) c FROM videos v WHERE steps_review_status='approved'
       AND EXISTS (SELECT 1 FROM video_steps st WHERE st.video_id=v.id)`).get()).toMatchObject({ c: 3 })
     expect(getDb().prepare(`SELECT count(*) c FROM audit_log WHERE action='review_approved'
-      AND json_extract(detail,'$.source')='user-confirmed approval manifest'`).get()).toMatchObject({ c: 17 })
+      AND json_extract(detail,'$.source')='user-confirmed approval manifest'`).get()).toMatchObject({ c: 11 })
   })
 
   it('驳回一条预设答案后，它立刻从下发列表消失', () => {
