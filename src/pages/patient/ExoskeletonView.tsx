@@ -27,6 +27,7 @@ export function ExoskeletonView() {
   const [motionPlaying, setMotionPlaying] = useState(() => !prefersReducedMotion)
   const [failedMotionIds, setFailedMotionIds] = useState<Set<string>>(() => new Set())
   const [syncStatus, setSyncStatus] = useState<SyncStatus>(alreadyComplete ? 'success' : 'idle')
+  const [visibleActionIndex, setVisibleActionIndex] = useState(() => alreadyComplete ? EXOSKELETON_ACTIONS.length - 1 : 0)
   const submittedRef = useRef(alreadyComplete)
   const mountedRef = useRef(true)
   const actionButtonRefs = useRef<Array<HTMLButtonElement | null>>([])
@@ -37,6 +38,10 @@ export function ExoskeletonView() {
     : session
   const finishedAllActions = viewSession.completedCount === EXOSKELETON_ACTIONS.length
   const trainingStarted = viewSession.phase !== 'ready'
+  const maxAccessibleActionIndex = finishedAllActions
+    ? EXOSKELETON_ACTIONS.length - 1
+    : viewSession.actionIndex
+  const showingCurrentAction = visibleActionIndex === viewSession.actionIndex
 
   useEffect(() => {
     mountedRef.current = true
@@ -70,6 +75,10 @@ export function ExoskeletonView() {
     })
     return () => window.cancelAnimationFrame(frame)
   }, [prefersReducedMotion, viewSession.actionIndex, viewSession.phase])
+
+  useEffect(() => {
+    setVisibleActionIndex(viewSession.actionIndex)
+  }, [viewSession.actionIndex])
 
   if (!task) {
     return (
@@ -208,8 +217,8 @@ export function ExoskeletonView() {
       <section className="exo-workspace" aria-labelledby="exo-actions-title">
         <header className="exo-workspace-head">
           <div>
-            <div className="exo-kicker">跟着画面，逐项完成</div>
-            <h2 id="exo-actions-title">{EXOSKELETON_ACTIONS.length} 个训练阶段</h2>
+            <div className="exo-kicker">一次专注一个动作</div>
+            <h2 id="exo-actions-title">当前训练阶段</h2>
           </div>
           <div className="exo-progress-copy" aria-live="polite">
             <span>当前进度</span>
@@ -233,6 +242,28 @@ export function ExoskeletonView() {
           ))}
         </div>
 
+        <nav className="exo-stage-nav" aria-label="训练阶段切换">
+          <button
+            className="btn-quiet exo-stage-nav-button"
+            disabled={visibleActionIndex === 0}
+            onClick={() => setVisibleActionIndex((index) => Math.max(0, index - 1))}
+          >
+            <span aria-hidden="true">←</span> 上一阶段
+          </button>
+          <div className="exo-stage-nav-current" aria-live="polite">
+            <span>第 {visibleActionIndex + 1} / {EXOSKELETON_ACTIONS.length} 阶段</span>
+            <strong>{EXOSKELETON_ACTIONS[visibleActionIndex].title}</strong>
+            {!showingCurrentAction && <small>正在回看已完成阶段</small>}
+          </div>
+          <button
+            className="btn-quiet exo-stage-nav-button"
+            disabled={visibleActionIndex >= maxAccessibleActionIndex}
+            onClick={() => setVisibleActionIndex((index) => Math.min(maxAccessibleActionIndex, index + 1))}
+          >
+            {visibleActionIndex + 1 === viewSession.actionIndex ? '回到当前阶段' : '下一阶段'} <span aria-hidden="true">→</span>
+          </button>
+        </nav>
+
         {viewSession.phase === 'stopped' && (
           <div className="exo-inline-stop" role="alert">
             <span className="exo-stop-icon"><IconAlert size={28} /></span>
@@ -244,14 +275,15 @@ export function ExoskeletonView() {
           </div>
         )}
 
-        <div className="exo-action-grid">
-          {EXOSKELETON_ACTIONS.map((item, index) => {
+        <div className="exo-action-grid is-single">
+          {[EXOSKELETON_ACTIONS[visibleActionIndex]].map((item) => {
+            const index = visibleActionIndex
             const done = finishedAllActions || index < viewSession.completedCount
             const current = viewSession.phase === 'training' && index === viewSession.actionIndex
             const celebrating = viewSession.phase === 'celebrating' && index === viewSession.actionIndex
             const stoppedHere = viewSession.phase === 'stopped' && index === viewSession.actionIndex
             const isPreviewAction = viewSession.phase === 'ready' && index === 0
-            const isFocusedAction = isPreviewAction || current || celebrating
+            const isFocusedAction = isPreviewAction || current || celebrating || done
             const motionFailed = failedMotionIds.has(item.id)
             const showMotion = isFocusedAction && motionPlaying && !prefersReducedMotion && !motionFailed
             const imageClassName = item.id === 'march-warmup'
@@ -321,7 +353,7 @@ export function ExoskeletonView() {
                       <div className="exo-kicker">动作 {index + 1}</div>
                       <h3 id={`exo-action-${item.id}`}>{item.title}</h3>
                     </div>
-                    {current && (
+                    {isFocusedAction && trainingStarted && viewSession.phase !== 'stopped' && (
                       <button
                         className="exo-motion-toggle"
                         onClick={() => setMotionPlaying((playing) => !playing)}
