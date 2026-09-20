@@ -11,6 +11,12 @@ const J = (s: unknown) => {
 }
 const B = (v: unknown) => v === 1 || v === true
 
+/**
+ * 已审核内容的哈希必须保持不变；品牌更名只在 API 展示模型中转换，
+ * 避免一次纯品牌调整把医疗内容误判成“未经审核的新版本”。
+ */
+const presentBrand = (value: string) => value.replaceAll('银康安馨', '银龄安康')
+
 export const toCheckIn = (r: any) => ({
   id: r.id, patientId: r.patient_id, taskId: r.task_id, date: r.date,
   status: r.status, at: r.at ?? undefined, note: r.note ?? undefined,
@@ -99,7 +105,7 @@ export const toPresetQA = (r: any) => ({
   id: r.id, question: r.question,
   basis: JJ(r.basis),
   external: JJ(r.external).length ? JJ(r.external) : undefined,
-  answer: JJ(r.answer),
+  answer: JJ(r.answer).map((line: string) => presentBrand(line)),
   escalate: r.escalate === 1,
   escalateHint: r.escalate_hint ?? undefined,
 })

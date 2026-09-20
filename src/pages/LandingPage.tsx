@@ -37,7 +37,7 @@ export function LandingPage() {
           <span className="brand-mark" style={{ width: 52, height: 52, borderRadius: 17, margin: '0 auto 16px' }}>
             <IconLeaf size={26} />
           </span>
-          <h1 style={{ fontSize: 'var(--t-2xl)', fontWeight: 660, letterSpacing: '.02em' }}>银康安馨</h1>
+          <h1 style={{ fontSize: 'var(--t-2xl)', fontWeight: 660, letterSpacing: '.02em' }}>银龄安康</h1>
           <p style={{ color: 'var(--ink-3)', fontSize: 'var(--t-md)', marginTop: 8 }}>
             居家康复智能助手
           </p>

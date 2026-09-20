@@ -156,7 +156,7 @@ const LLM_OPTIONS = [
 /** 构建系统提示词，注入患者档案上下文 */
 /** 双源回答的分段标记 —— 提示词里要求模型原样输出，前端据此切成两块 */
 export const SRC_EXTERNAL = '【网络参考信息】'
-export const SRC_TEAM = '【银康安馨专业建议】'
+export const SRC_TEAM = '【银龄安康专业建议】'
 
 function buildSystemPrompt(ctx: PromptCtx): string {
   const { patient, taskDefs, therapist, planConfirmedOn } = ctx
@@ -186,7 +186,7 @@ ${SRC_EXTERNAL}
 
 ${SRC_TEAM}
 结合上面档案里的具体情况给出的建议，要点到她的评估数据或今日计划。
-末尾另起一行写「—— 银康安馨康复团队」。
+末尾另起一行写「—— 银龄安康康复团队」。
 
 【如实原则 · 最重要】
 - 你没有联网检索能力，第一段只能写你确知的通用科普，**不要暗示是刚刚搜到的**。
@@ -448,7 +448,7 @@ export function ChatView() {
 
                 {m.externalText ? (
                   <div className="src src-team">
-                    <div className="src-t">银康安馨专业建议</div>
+                    <div className="src-t">银龄安康专业建议</div>
                     {m.id === streamingId
                       ? <StreamingBody text={m.text} onDone={() => setStreamingId(null)} />
                       : m.text.split('\n').map((line, i) => <RichText key={i} text={line} />)}
@@ -519,7 +519,7 @@ export function ChatView() {
                     </div>
                     {team && (
                       <div className="src src-team">
-                        <div className="src-t">银康安馨专业建议</div>
+                        <div className="src-t">银龄安康专业建议</div>
                         <StreamingText text={team} />
                       </div>
                     )}

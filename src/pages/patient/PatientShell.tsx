@@ -108,7 +108,7 @@ function PatientShellInner() {
           <div className="brand">
             <span className="brand-mark"><IconLeaf size={17} /></span>
             <span>
-              <div className="brand-name">银康安馨</div>
+              <div className="brand-name">银龄安康</div>
               <div className="brand-sub">居家康复智能助手</div>
             </span>
           </div>

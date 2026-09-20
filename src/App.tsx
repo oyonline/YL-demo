@@ -24,7 +24,7 @@ export default function App() {
           element={
             <LoginPage
               role="family"
-              title="银康安馨"
+              title="银龄安康"
               subtitle="居家康复智能助手 · 老人／家属登录"
               home="/patient"
               skin="warm"
@@ -46,7 +46,7 @@ export default function App() {
           element={
             <LoginPage
               role="therapist"
-              title="银康安馨"
+              title="银龄安康"
               subtitle="护理员工作台 · 远程随访与指导"
               home="/therapist"
               skin="cool"
