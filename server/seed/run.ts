@@ -24,6 +24,7 @@ import { PRESET_QA } from '../../src/data/qa.ts'
 import { DAILY_REMINDERS } from '../../src/data/reminders.ts'
 import {
   APPROVAL_RECORDED_AT,
+  GUIDANCE_APPROVAL_RECORDED_AT,
   APPROVED_GUIDANCE,
   APPROVED_KB_DOCUMENTS,
   APPROVED_PRESET_QA,
@@ -201,7 +202,7 @@ const seed = db.transaction(() => {
   GUIDANCE.forEach((g, i) => {
     const approved = isApprovedVersion(APPROVED_GUIDANCE, g.id, hashApprovedContent(g))
     insGuide.run(g.id, g.title, g.summary, J(g.items), g.alert ?? null, g.relatedVideoId ?? null,
-      approved ? 'approved' : 'pending', approved ? APPROVAL_RECORDED_AT : null, i, now)
+      approved ? 'approved' : 'pending', approved ? GUIDANCE_APPROVAL_RECORDED_AT : null, i, now)
     if (approved) recordManifestApproval('guidance', g.id)
   })
 

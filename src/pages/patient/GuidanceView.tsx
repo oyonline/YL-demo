@@ -1,13 +1,14 @@
 import { Link } from 'react-router-dom'
 import { useContent, usePatientData } from '../../data/context'
-import { IconActivity, IconAlert, IconApple, IconBan, IconChevron, IconDroplet, IconLeaf, IconUtensils } from '../../components/Icons'
+import { CURRENT_GUIDANCE_ID } from '../../data/guidance'
+import { IconActivity, IconAlert, IconApple, IconChevron, IconDroplet, IconLeaf, IconUtensils } from '../../components/Icons'
 
 const GUIDANCE_ICONS: Record<string, React.ReactNode> = {
-  feeding: <IconUtensils size={19} />,
-  texture: <IconDroplet size={19} />,
-  menu: <IconApple size={19} />,
-  'bp-diet': <IconActivity size={19} />,
-  taboo: <IconBan size={19} />,
+  'week-1': <IconUtensils size={19} />,
+  'week-2': <IconActivity size={19} />,
+  'week-3': <IconApple size={19} />,
+  'week-4': <IconLeaf size={19} />,
+  'month-rules': <IconDroplet size={19} />,
 }
 
 /**
@@ -26,27 +27,31 @@ export function GuidanceView() {
     <div className="stack">
       <section className="card card-pad">
         <div className="eyebrow">饮食指导</div>
-        <h2 className="card-title">按 {patient.diagnosis.stage} 给出的日常建议</h2>
+        <h2 className="card-title">四周饮食调理计划</h2>
         <p className="card-note" style={{ marginTop: 6 }}>
-          内容取自甲方《饮食与营养指导》知识库文档，结合她的吞咽情况与合并疾病整理；涉及性状调整与用药的部分由护理员确定
+          当前阶段：{patient.diagnosis.stage} · 四周计划全部展示，食材、配方与用量由护理员或营养专业人员确认
         </p>
       </section>
 
       <div className="glist">
-        {GUIDANCE.map((g) => (
-          <Link className="grow" to={`/patient/guidance/${g.id}`} key={g.id}>
+        {GUIDANCE.map((g) => {
+          const isCurrent = g.id === CURRENT_GUIDANCE_ID
+          return (
+          <Link className={`grow${isCurrent ? ' grow-current' : ''}`} to={`/patient/guidance/${g.id}`} key={g.id}>
             <span className="grow-ico">{guidanceIcon(g.id)}</span>
             <span style={{ flex: 1, minWidth: 0 }}>
               <span className="grow-t">{g.title}</span>
               <span className="grow-s">{g.summary}</span>
               <span className="grow-m">
+                {isCurrent && <span className="chip chip-brand">当前周</span>}
                 <span className="chip num">{g.items.length} 条建议</span>
                 {g.alert && <span className="chip chip-miss"><IconAlert size={11} /> 含就医提示</span>}
               </span>
             </span>
             <span className="grow-go"><IconChevron /></span>
           </Link>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

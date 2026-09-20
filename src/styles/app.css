@@ -1312,6 +1312,11 @@
   transition: border-color .16s, background .16s;
 }
 .grow:hover { border-color: var(--teal-300); background: var(--teal-50); }
+.grow-current {
+  border-color: var(--teal-300);
+  background: linear-gradient(90deg, var(--teal-50), var(--surface));
+  box-shadow: inset 3px 0 0 var(--teal-700);
+}
 .grow-ico {
   width: 46px; height: 46px; border-radius: var(--r); flex: none;
   background: var(--green-50); color: var(--green-700);

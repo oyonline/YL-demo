@@ -8,6 +8,7 @@ import { createHash } from 'crypto'
  * 哈希就不再匹配，重新灌种或导入时会回到 pending，避免新内容自动继承旧审批。
  */
 export const APPROVAL_RECORDED_AT = '2026-09-14T02:45:00.000Z'
+export const GUIDANCE_APPROVAL_RECORDED_AT = '2026-09-20T07:25:00.000Z'
 
 export const APPROVED_PRESET_QA: Readonly<Record<string, string>> = {
   choking: '582059b3197e6f592630bbbed6740242993b40f349f00a96b69816f83ac50050',
@@ -22,11 +23,11 @@ export const APPROVED_PRESET_QA: Readonly<Record<string, string>> = {
 }
 
 export const APPROVED_GUIDANCE: Readonly<Record<string, string>> = {
-  feeding: 'eaee6ebe544c6e2f6de818d2a886b5cc20de95e88241f2a53c41e3658488b746',
-  texture: 'd37ed9ee7cebb38d2d3e0ff8768fe5a31ab07b799c64ea2d284558356ebd43c0',
-  menu: '043757b59858e5ac97e4eff1612c2d1248e33e612026104944164f359744efff',
-  'bp-diet': '81f0a262d17abdaf859e1769b90077d94009169db0b58d99951f9cbb03890389',
-  taboo: '63d77ef17bd1813a6b85c97adee53a8f00d0474a0ee68d7ab5cb8845a9e95dc1',
+  'week-1': '499d7ccfb6e353aff80b6d7caefc921ffe8b8d255793acef36559f33e7c2d879',
+  'week-2': '65e6d3a451efb2117cb4a8497e82e95785b0beb1b596aeef521338d6f62beb02',
+  'week-3': 'bb116bfcc47b52a71a8b88c9b07ccef97be92c2f8e34a3db6867d9ac91aee970',
+  'week-4': '7e8b5694ef57ea7d0f103f5a0932f216e52548607cfbd5529d86bfa8488ac353',
+  'month-rules': '59c360ea4e54334e88eeb2c9a983d9a0396b0bb744a8a8807a84ba1de529c7a5',
 }
 
 export const APPROVED_VIDEO_STEPS: Readonly<Record<string, string>> = {
