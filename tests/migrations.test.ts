@@ -27,6 +27,9 @@ describe('数据库迁移', () => {
       '0006_monthly_diet_guidance.sql',
       '0007_replace_preset_qa_with_enteral_three.sql',
       '0008_game_stage_records.sql',
+      '0009_wang_ping_profile.sql',
+      '0010_wang_ping_care_alert.sql',
+      '0011_seed_blood_pressure_history.sql',
     ])
   })
 

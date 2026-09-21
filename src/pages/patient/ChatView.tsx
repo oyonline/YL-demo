@@ -415,7 +415,7 @@ export function ChatView() {
       <div className="card-hd">
         <div>
           <div className="eyebrow">智能对话咨询</div>
-          <h2 className="card-title">结合王萍奶奶档案作答</h2>
+          <h2 className="card-title">结合王萍档案作答</h2>
         </div>
         <span className="card-note">复杂问题会转交 {therapist.name}</span>
       </div>

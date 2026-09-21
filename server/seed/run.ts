@@ -1,7 +1,7 @@
 /**
  * 种子灌入 —— 把 src/data/ 里的演示数据搬进数据库。
  *
- * 王萍奶奶保留完整演示数据；赵福安爷爷按 2026-09-03 用户裁决仅预置
+ * 王萍保留完整演示数据；赵福安爷爷按 2026-09-03 用户裁决仅预置
  * 最小建档记录，不预置诊断、评估、用药、康复计划或执行历史。
  *
  * 幂等：每次运行先清空业务表（包括演示审计日志）再重灌，便于反复排练。
@@ -61,7 +61,7 @@ const seed = db.transaction(() => {
   // 正式部署必须改密 —— 见方案 §3.2。
   const users = [
     { id: 'u-family-chen', username: 'liying', pw: '123456', role: 'family',
-      display: '李英女士（女儿）', title: null },
+      display: '李英（独女）', title: null },
     { id: 'u-family-zhao', username: 'zhao', pw: '123456', role: 'family',
       display: '赵福安爷爷', title: null },
     { id: 'u-th-zhou', username: 'zhou', pw: '123456', role: 'therapist',
@@ -91,11 +91,15 @@ const seed = db.transaction(() => {
   /* ---------- 患者 ---------- */
   const p = patient
   db.prepare(`INSERT INTO patients
-    (id,name,gender,age_band,height_cm,weight_kg,living_situation,psychosocial,communication,
+    (id,name,gender,age_band,marital_status,occupation,monthly_pension_yuan,
+     height_cm,weight_kg,bmi,upper_arm_cm,calf_cm,living_situation,psychosocial,communication,
      avatar,primary_therapist_id,origin,status,created_at,updated_at)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,'active',?,?)`)
-    .run(p.id, p.name, p.gender, p.ageBand, p.heightCm, p.weightKg, p.livingSituation,
-         p.psychosocial ?? null, p.communication, p.avatar, 'u-th-zhou', p.origin, now, now)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'active',?,?)`)
+    .run(p.id, p.name, p.gender, p.ageBand,
+         p.maritalStatus ?? null, p.occupation ?? null, p.monthlyPensionYuan ?? null,
+         p.heightCm, p.weightKg, p.bodyMetrics?.bmi ?? null, p.bodyMetrics?.upperArmCm ?? null,
+         p.bodyMetrics?.calfCm ?? null, p.livingSituation, p.psychosocial ?? null,
+         p.communication, p.avatar, 'u-th-zhou', p.origin, now, now)
 
   const insMember = db.prepare(`INSERT INTO patient_members
     (patient_id,user_id,relation,access,granted_at) VALUES (?,?,?,?,?)`)
@@ -117,9 +121,12 @@ const seed = db.transaction(() => {
 
   db.prepare(`INSERT INTO patient_contact
     (patient_id,emergency_name,emergency_relation,emergency_phone,
-     caregiver_name,caregiver_relation,assistive_devices,past_history) VALUES (?,?,?,?,?,?,?,?)`)
+     caregiver_name,caregiver_relation,caregiver_gender,caregiver_age,
+     caregiver_skill_gaps,caregiver_pressures,assistive_devices,past_history)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`)
     .run(p.id, p.emergencyContact.name, p.emergencyContact.relation, p.emergencyContact.phoneMasked,
-         p.caregiver.name, p.caregiver.relation, J(p.assistiveDevices), J(p.pastHistory))
+         p.caregiver.name, p.caregiver.relation, p.caregiver.gender ?? null, p.caregiver.age ?? null,
+         J(p.caregiver.skillGaps), J(p.caregiver.pressures), J(p.assistiveDevices), J(p.pastHistory))
 
   /* 赵福安爷爷：只建立患者索引和空档案骨架，康复计划尚未制定 */
   const zhaoId = 'p-zhao-grandpa'

@@ -108,6 +108,9 @@ async function stream() {
     const res = await authFetch(`/api/patients/${patientId}/events`, { signal: ac.signal })
     if (!res.ok || !res.body) throw new Error(`SSE ${res.status}`)
     retry = 0
+    // 断线期间可能已经发生数据库迁移或另一端写入，而这些历史事件不会重放。
+    // 每次流连接成功都先补拉一次当前快照，避免页面永久停留在断线前的旧缓存。
+    void load()
     const reader = res.body.getReader()
     const dec = new TextDecoder()
     let buf = ''
@@ -167,6 +170,11 @@ export function useDemoLoaded(): boolean {
 
 export function getState(): DemoState {
   return cache
+}
+
+/** 页面显式要求最新动态数据时使用，例如进入健康数据页。 */
+export function refreshDemoState(): Promise<void> {
+  return load()
 }
 
 /* ---------- 提交 ---------- */

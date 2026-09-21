@@ -15,7 +15,9 @@ const B = (v: unknown) => v === 1 || v === true
  * 已审核内容的哈希必须保持不变；品牌更名只在 API 展示模型中转换，
  * 避免一次纯品牌调整把医疗内容误判成“未经审核的新版本”。
  */
-const presentBrand = (value: string) => value.replaceAll('银康安馨', '银龄安康')
+const presentBrand = (value: string) => value
+  .replaceAll('银康安馨', '银龄安康')
+  .replaceAll('王萍奶奶', '王萍')
 
 export const toCheckIn = (r: any) => ({
   id: r.id, patientId: r.patient_id, taskId: r.task_id, date: r.date,
@@ -43,17 +45,17 @@ export const toUpload = (r: any) => ({
 })
 
 export const toMessage = (r: any) => ({
-  id: r.id, patientId: r.patient_id, role: r.role, text: r.text,
+  id: r.id, patientId: r.patient_id, role: r.role, text: presentBrand(r.text),
   at: r.at,
   answerSource: r.answer_source ?? undefined,
-  externalText: r.external_text ?? undefined,
-  basis: J(r.basis).length ? J(r.basis) : undefined,
+  externalText: r.external_text ? presentBrand(r.external_text) : undefined,
+  basis: J(r.basis).length ? J(r.basis).map((line: string) => presentBrand(line)) : undefined,
   escalated: B(r.escalated) || undefined,
 })
 
 export const toGuidance = (r: any) => ({
   id: r.id, patientId: r.patient_id, therapistName: r.therapist_name,
-  at: r.at, text: r.text,
+  at: r.at, text: presentBrand(r.text),
   aboutDate: r.about_date ?? undefined,
   aboutTaskId: r.about_task_id ?? undefined,
   readByFamily: B(r.read_by_family),
@@ -61,10 +63,10 @@ export const toGuidance = (r: any) => ({
 
 export const toEscalation = (r: any) => ({
   id: r.id, patientId: r.patient_id, at: r.at, source: r.source,
-  question: r.question, context: J(r.context),
+  question: presentBrand(r.question), context: J(r.context).map((line: string) => presentBrand(line)),
   taskId: r.task_id ?? undefined,
   status: r.status,
-  answer: r.answer ?? undefined,
+  answer: r.answer ? presentBrand(r.answer) : undefined,
   answeredAt: r.answered_at ?? undefined,
   therapistName: r.therapist_name ?? undefined,
 })
@@ -97,21 +99,21 @@ export const toVideo = (r: any) => ({
 })
 
 export const toReminder = (r: any) => ({
-  id: r.id, time: r.time, text: r.text,
+  id: r.id, time: r.time, text: presentBrand(r.text),
   taskId: r.task_id ?? undefined,
   highlight: r.highlight === 1 || undefined,
 })
 
 export const toGuidanceCard = (r: any) => ({
-  id: r.id, title: r.title, summary: r.summary ?? '',
-  items: JJ(r.items),
-  alert: r.alert ?? undefined,
+  id: r.id, title: presentBrand(r.title), summary: presentBrand(r.summary ?? ''),
+  items: JJ(r.items).map((line: string) => presentBrand(line)),
+  alert: r.alert ? presentBrand(r.alert) : undefined,
   relatedVideoId: r.related_video_id ?? undefined,
 })
 
 export const toPresetQA = (r: any) => ({
   id: r.id, question: r.question,
-  basis: JJ(r.basis),
+  basis: JJ(r.basis).map((line: string) => presentBrand(line)),
   external: JJ(r.external).length ? JJ(r.external) : undefined,
   answer: JJ(r.answer).map((line: string) => presentBrand(line)),
   escalate: r.escalate === 1,
@@ -125,10 +127,20 @@ export function toPatient(p: any, parts: {
 }) {
   const { diagnosis: d, func: f, goals: g, contact: c } = parts
   return {
-    id: p.id, name: p.name, avatar: p.avatar ?? '', ageBand: p.age_band, gender: p.gender,
+    id: p.id, name: presentBrand(p.name), avatar: p.avatar ?? '', ageBand: p.age_band, gender: p.gender,
+    maritalStatus: p.marital_status ?? undefined,
+    occupation: p.occupation ?? undefined,
+    monthlyPensionYuan: p.monthly_pension_yuan ?? undefined,
     heightCm: p.height_cm, weightKg: p.weight_kg,
+    bodyMetrics: p.bmi == null ? undefined : {
+      bmi: p.bmi, upperArmCm: p.upper_arm_cm, calfCm: p.calf_cm,
+    },
     livingSituation: p.living_situation ?? '',
-    caregiver: { name: c?.caregiver_name ?? '', relation: c?.caregiver_relation ?? '' },
+    caregiver: {
+      name: c?.caregiver_name ?? '', relation: c?.caregiver_relation ?? '',
+      gender: c?.caregiver_gender ?? undefined, age: c?.caregiver_age ?? undefined,
+      skillGaps: JJ(c?.caregiver_skill_gaps), pressures: JJ(c?.caregiver_pressures),
+    },
     diagnosis: {
       strokeType: d?.stroke_type ?? '', onsetDate: d?.onset_date ?? '',
       stage: d?.stage ?? '', comorbidities: JJ(d?.comorbidities),

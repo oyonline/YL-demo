@@ -87,12 +87,9 @@ function PatientShellInner() {
   const loaded = useDemoLoaded()
   const unread = state.guidances.filter((g) => !g.readByFamily).length
 
-  // 只取家属可见、且给了短形式的量表；顺序按 TILE_ORDER，不依赖 seed 的书写顺序
-  const assessTiles = TILE_ORDER
-    .map((n) => patient.assessments.find((a) => a.name === n))
-    .filter((a): a is NonNullable<typeof a> => Boolean(a?.tile && a.visibleToFamily))
-    .map((a) => a.tile!)
-  const assessDate = patient.assessments.find((a) => a.tile)?.date ?? ''
+  const swallowing = patient.assessments.find((a) => a.name === '洼田饮水试验')
+  const nutrition = patient.assessments.find((a) => a.name === 'MNA-SF 营养评估')
+  const strength = patient.assessments.find((a) => a.name === 'MMT 徒手肌力测试')
 
   // 首屏数据来自服务端，未到之前先不渲染 —— 否则会闪一下"全部未完成"
 
@@ -156,42 +153,37 @@ function PatientShellInner() {
             <div className="avatar">{patient.name[0]}</div>
             <div>
               <div className="profile-name">{patient.name}</div>
-              <div className="profile-meta">{[patient.gender, patient.ageBand].filter(Boolean).join(' · ') || '基本信息待完善'}</div>
-            </div>
-          </div>
-
-          <div className="profile-tags">
-            {patient.diagnosis.stage && <span className="chip chip-brand">{patient.diagnosis.stage.replace('居家康复·', '')}</span>}
-            {patient.diagnosis.strokeType && <span className="profile-dx">{patient.diagnosis.strokeType}</span>}
-            {!patient.diagnosis.stage && !patient.diagnosis.strokeType && <span className="chip">档案待完善</span>}
-          </div>
-
-          {/* ② 评估摘要 —— 四张量表的分值，全卡最有说服力的部分 */}
-          <div className="fgroup fgroup-bare">评估摘要</div>
-          <div className="assess">
-            {assessTiles.length === 0 && <div className="card-note">尚未开始评估</div>}
-            {assessTiles.map((t) => (
-              <div className="assess-i" key={t.label}>
-                <div className="assess-k">{t.label}</div>
-                <div className="assess-v num">{t.value}</div>
-                <div className="assess-n">{t.note}</div>
+              <div className="profile-meta">
+                {[patient.gender, patient.ageBand, patient.maritalStatus].filter(Boolean).join(' · ') || '基本信息待完善'}
               </div>
-            ))}
-          </div>
-          {assessDate && <div className="assess-src">{assessDate} · 康复团队评估</div>}
-
-          <dl className="facts" style={{ marginTop: 18 }}>
-            <div className="fact">
-              <dt className="fact-k">合并疾病</dt>
-              <dd className="fact-v" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
-                {patient.diagnosis.comorbidities.length > 0
-                  ? patient.diagnosis.comorbidities.map((c) => <span className="chip" key={c}>{c}</span>)
-                  : '尚未录入'}
-              </dd>
             </div>
-            <Fact k="主要照护人" v={patient.caregiver.name ? `${patient.caregiver.name}${patient.caregiver.relation ? `（${patient.caregiver.relation}）` : ''}` : '尚未录入'} />
-            <Fact k="下次复评" v={patient.goals.nextReviewDate || '待安排'} />
-          </dl>
+          </div>
+
+          <ul className="profile-overview">
+            <li>{patient.occupation || '职业待完善'}{patient.monthlyPensionYuan ? `，退休金${patient.monthlyPensionYuan}元/月` : ''}</li>
+            <li>
+              身高{patient.heightCm}cm，体重{patient.weightKg}kg
+              {patient.bodyMetrics && `，BMI ${patient.bodyMetrics.bmi}，上臂围${patient.bodyMetrics.upperArmCm}cm，小腿围${patient.bodyMetrics.calfCm}cm`}
+            </li>
+            <li>{patient.communication || '沟通情况待完善'}</li>
+          </ul>
+
+          <div className="fgroup fgroup-bare">核心情况</div>
+          <div className="profile-issues">
+            <ProfileIssue label="吞咽障碍" value={swallowing ? `${swallowing.name}${swallowing.value}` : '待评估'} />
+            <ProfileIssue label="营养失调" value={nutrition ? `MNA-SF ${nutrition.value}` : '待评估'} />
+            <ProfileIssue label="步态失衡" value={strength?.value.replaceAll(' / ', '  ') || '待评估'} />
+            <ProfileIssue label="情绪波动" value={patient.psychosocial?.replace(/^情绪波动[：:]/, '') || '待评估'} />
+          </div>
+
+          <div className="caregiver-summary">
+            <div className="fgroup fgroup-bare">主要照护人</div>
+            <div className="caregiver-name">
+              {[patient.caregiver.name, patient.caregiver.gender, patient.caregiver.age ? `${patient.caregiver.age}岁` : '', patient.caregiver.relation].filter(Boolean).join(' · ')}
+            </div>
+            <ProfileIssue label="技能缺失" value={patient.caregiver.skillGaps?.join('、') || '待完善'} />
+            <ProfileIssue label="心理压力" value={patient.caregiver.pressures?.join('、') || '待完善'} />
+          </div>
 
           <button className="link-more" onClick={() => setProfileOpen(true)}>
             <IconFile /> 查看完整档案
@@ -243,16 +235,11 @@ function PatientShellInner() {
  * 按今日任务的相关度排序：下肢训练→肌力、吞咽操→洼田、
  * 任务与评估卡按当前档案展示。
  */
-const TILE_ORDER = ['MMT 徒手肌力测试', '洼田饮水试验', 'MMSE 简易智能量表']
-
-function Fact({ k, v, tag }: { k: string; v: string; tag?: string }) {
+function ProfileIssue({ label, value }: { label: string; value: string }) {
   return (
-    <div className="fact">
-      <dt className="fact-k">
-        {k}
-        {tag && <span className="tag-warn">{tag}</span>}
-      </dt>
-      <dd className="fact-v">{v}</dd>
+    <div className="profile-issue">
+      <span className="profile-issue-label">{label}</span>
+      <span className="profile-issue-value">{value}</span>
     </div>
   )
 }

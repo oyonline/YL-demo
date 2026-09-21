@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {BP_SAFE, isBpAbnormal} from '../../data/seed'
 import { usePatientData } from '../../data/context'
-import { addVital, useDemoState } from '../../store/store'
+import { addVital, refreshDemoState, useDemoState } from '../../store/store'
 import { BpChart } from '../../components/BpChart'
 import { IconAlert, IconCheck, IconHeart } from '../../components/Icons'
 import { EXOSKELETON_ACTIONS } from '../../features/exoskeleton/session'
@@ -19,6 +19,11 @@ import { EXOSKELETON_ACTIONS } from '../../features/exoskeleton/session'
  */
 export function VitalsView() {
   const [tab, setTab] = useState<'blood-pressure' | 'feeding' | 'game'>('blood-pressure')
+
+  // 健康数据页必须以服务端最新记录为准，不能沿用应用启动时的旧动态快照。
+  useEffect(() => {
+    void refreshDemoState()
+  }, [])
 
   return (
     <div className="stack">

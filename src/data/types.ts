@@ -40,6 +40,10 @@ export const ORIGIN_LABEL: Record<DataOrigin, string> = {
 export interface Caregiver {
   name: string
   relation: string
+  gender?: '男' | '女'
+  age?: number
+  skillGaps?: string[]
+  pressures?: string[]
 }
 
 export interface Medication {
@@ -97,8 +101,12 @@ export interface Patient {
   avatar: string
   ageBand: string
   gender: '男' | '女'
+  maritalStatus?: string
+  occupation?: string
+  monthlyPensionYuan?: number
   heightCm: number
   weightKg: number
+  bodyMetrics?: { bmi: number; upperArmCm: number; calfCm: number }
   livingSituation: string
   caregiver: Caregiver
   diagnosis: {

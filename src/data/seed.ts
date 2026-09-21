@@ -1,8 +1,8 @@
 /**
  * 演示数据 —— 演示病例，不对应任何真实个人。
  *
- * 2026-09-12 按用户确认的新资料换为「王萍奶奶」。
- * MMT、MMSE 与洼田分级均直接来自该资料，本项目未生成分值。
+ * 2026-09-21 按用户确认的新资料更新为「王萍」。
+ * MMT、MNA-SF 与洼田分级均直接来自该资料，本项目未生成分值。
  *
  * 仍然守住的边界：
  * - 用药剂量甲方同样未给（其模板原文只写「吃降压药（如果医生有开药）」），
@@ -22,15 +22,22 @@ export const SUPPORT_PHONE = '400-000-0000'
 
 export const patient: Patient = {
   id: PATIENT_ID,
-  name: '王萍奶奶',
+  name: '王萍',
   avatar: '',
   ageBand: '78 岁',
   gender: '女',
-  // SYNTHETIC：甲方评估表未提供身高体重
-  heightCm: 156,
-  weightKg: 48,
-  livingSituation: '与女儿同住，日间主要由女儿照护',
-  caregiver: { name: '李英女士', relation: '女儿' },
+  maritalStatus: '丧偶',
+  occupation: '农村中学退休音乐老师',
+  monthlyPensionYuan: 4000,
+  heightCm: 155,
+  weightKg: 42,
+  bodyMetrics: { bmi: 17.5, upperArmCm: 22, calfCm: 30 },
+  livingSituation: '丧偶，由独女李英照护',
+  caregiver: {
+    name: '李英', relation: '独女', gender: '女', age: 50,
+    skillGaps: ['知识匮乏', '资源不足'],
+    pressures: ['母女关系紧张', '未来焦虑'],
+  },
   diagnosis: {
     strokeType: '脑梗死后遗症（病程 1 个月）',
     // SYNTHETIC：新资料未给确切发病日，此处仅供日期字段占位
@@ -41,11 +48,11 @@ export const patient: Patient = {
   functionStatus: {
     affectedSide: '左侧肢体活动不利',
     mobility: '左上肢肌力 MMT 4 级、左下肢 3 级，右侧良好；存在步态失衡，转移与步行全程须有人保护',
-    swallowing: '洼田饮水试验 Ⅱ 级；当前按鼻饲流质饮食照护，鼻饲时抬高床头，结束后保持体位 30～60 分钟',
-    cognition: 'MMSE 27 分，认知正常',
+    swallowing: '洼田饮水试验 Ⅲ 级；当前按鼻饲流质饮食照护，鼻饲时抬高床头，结束后保持体位 30～60 分钟',
+    cognition: '神志清醒，能进行语言沟通',
     risks: [
       '跌倒风险（步态失衡）',
-      '误吸风险（洼田 Ⅱ 级）',
+      '误吸风险（洼田 Ⅲ 级）',
       '鼻饲照护（流质饮食）',
     ],
   },
@@ -62,12 +69,12 @@ export const patient: Patient = {
   assessments: [
     {
       name: '洼田饮水试验',
-      value: 'Ⅱ 级',
-      level: '可疑误吸（阳性）',
-      tile: { label: '洼田饮水', value: 'Ⅱ 级', note: '可疑误吸' },
+      value: 'Ⅲ 级',
+      level: '吞咽障碍',
+      tile: { label: '洼田饮水', value: 'Ⅲ 级', note: '吞咽障碍' },
       date: '2026-09-12',
       assessor: '专业团队',
-      note: '30ml 温水可全部喝完但需分两次咽下。建议进行吞咽功能训练，食物从糊状开始逐步过渡，小口慢咽，进食保持端坐位。',
+      note: '洼田饮水试验Ⅲ级，存在吞咽障碍。',
       visibleToFamily: true,
     },
     {
@@ -81,13 +88,13 @@ export const patient: Patient = {
       visibleToFamily: true,
     },
     {
-      name: 'MMSE 简易智能量表',
-      value: '27 分',
-      level: '认知正常',
-      tile: { label: 'MMSE', value: '27 分', note: '认知正常' },
+      name: 'MNA-SF 营养评估',
+      value: '7 分',
+      level: '营养失调',
+      tile: { label: 'MNA-SF', value: '7 分', note: '营养失调' },
       date: '2026-09-12',
       assessor: '康复团队',
-      note: '满分 30 分，本次评估 27 分，认知正常。',
+      note: 'MNA-SF 7分，提示营养失调。',
       visibleToFamily: true,
     },
   ],
@@ -101,16 +108,17 @@ export const patient: Patient = {
     nextReviewDate: '2026-10-27',
   },
 
+  psychosocial: '情绪波动：烦躁、恐惧、拒绝接触',
   careEvents: [
-    { date: '2026-09-12', kind: 'assessment', title: '照护评估', detail: '完成 MMT、MMSE 与洼田饮水试验评估。' },
-    { date: '2026-09-12', kind: 'homecare', title: '准备期照护计划制定', detail: '根据王萍奶奶档案制定准备期第一周照护与训练计划。' },
+    { date: '2026-09-12', kind: 'assessment', title: '照护评估', detail: '完成 MMT、MNA-SF 与洼田饮水试验评估。' },
+    { date: '2026-09-12', kind: 'homecare', title: '准备期照护计划制定', detail: '根据王萍档案制定准备期第一周照护与训练计划。' },
     { date: '2026-10-27', kind: 'upcoming', title: '下次复评', detail: '复评左侧肢体功能、认知与吞咽情况，并据此调整下一阶段计划。' },
   ],
 
   // SYNTHETIC：联系电话甲方未提供，此处为脱敏占位
-  emergencyContact: { name: '李英女士', relation: '女儿', phoneMasked: '138****6721' },
+  emergencyContact: { name: '李英', relation: '独女', phoneMasked: '138****6721' },
   assistiveDevices: ['外骨骼助行设备', '床边护栏'],
-  communication: '意识清楚，MMSE 27 分，认知正常，可配合指令。',
+  communication: '神志清醒，能进行语言沟通。',
   pastHistory: ['高血压 20 年', '脑梗死后遗症，病程 1 个月', '左侧肢体活动不利'],
 
   origin: 'synthetic',
@@ -130,7 +138,7 @@ export const therapist: Therapist = {
 
 /**
  * 今日任务模板 —— 取自甲方《银康安馨·扣子智能体演示流程与内容脚本》环节四的
- * 任务时间线，与王萍奶奶资料对齐。
+ * 任务时间线，与王萍资料对齐。
  * 训练项目为「准备期（第 1 周）」方案。
  */
 const RAW_TASKS: TaskDef[] = [
@@ -234,7 +242,7 @@ export const TODAY_TASK_COUNT = taskDefs.length
  * 其余仅呈现服务规模，不可点开 —— 不为演示编造第二份病例。
  */
 export const roster: RosterEntry[] = [
-  { id: PATIENT_ID, name: '王萍奶奶', gender: '女', ageBand: '78 岁', stage: '准备期（第 1 周）', todayDone: 0, todayTotal: TODAY_TASK_COUNT },
+  { id: PATIENT_ID, name: '王萍', gender: '女', ageBand: '78 岁', stage: '准备期（第 1 周）', todayDone: 0, todayTotal: TODAY_TASK_COUNT },
   { id: 'p-002', name: '周德海', gender: '男', ageBand: '78 岁', stage: '居家康复第 2 阶段', todayDone: 3, todayTotal: 3 },
   { id: 'p-003', name: '孙玉兰', gender: '女', ageBand: '81 岁', stage: '居家康复第 4 阶段', todayDone: 2, todayTotal: 4, flag: '连续 2 天未完成' },
   { id: 'p-004', name: '马长顺', gender: '男', ageBand: '73 岁', stage: '居家康复第 1 阶段', todayDone: 5, todayTotal: 5 },
@@ -352,13 +360,40 @@ export function isBpAbnormal(v: { systolic: number; diastolic: number }): boolea
 
 /**
  * 演示基线数据 —— 甲方演示脚本环节六：「这里记录血压，我们上门测的数据已经在了」。
- * 按每日任务模板的 07:00 与 20:30 各测一次，铺最近三天，加上今天早晨一条。
+ * 按每日任务模板的 07:00 与 20:30 各测一次，铺最近七天，加上今天早晨一条。
  * 全部在安全范围内：超标那一条留给现场当场录入，才有「录入 → 预警」的过程。
- * 09:00 那条是康复护士小彭训练前测的 112/70，与评估表一致。
+ * 其中一条标记为康复护士测量，用于在明细中区分记录来源。
  */
 export function buildVitals(today: Date): VitalRecord[] {
-  void today
-  return []
+  const values = [
+    [[128, 78], [132, 80]],
+    [[125, 76], [130, 79]],
+    [[127, 77], [134, 82]],
+    [[123, 75], [129, 78]],
+    [[126, 77], [131, 80]],
+    [[124, 76], [128, 79]],
+    [[122, 74]],
+  ] as const
+
+  return values.flatMap((dayValues, dayIndex) => {
+    const date = new Date(today)
+    date.setHours(12, 0, 0, 0)
+    date.setDate(date.getDate() - (6 - dayIndex))
+    const dateISO = toISODate(date)
+    return dayValues.map(([systolic, diastolic], timeIndex) => {
+      const time = timeIndex === 0 ? '07:00' : '20:30'
+      return {
+        id: `vital-demo-d${6 - dayIndex}-${timeIndex === 0 ? 'am' : 'pm'}`,
+        patientId: PATIENT_ID,
+        date: dateISO,
+        time,
+        systolic,
+        diastolic,
+        by: dayIndex === 3 && timeIndex === 0 ? '康复护士' as const : '家属' as const,
+        at: new Date(`${dateISO}T${time}:00+08:00`).toISOString(),
+      }
+    })
+  })
 }
 
 /** 三次固定的互动游戏历史，供初次演示与“重置演示”恢复使用。 */
