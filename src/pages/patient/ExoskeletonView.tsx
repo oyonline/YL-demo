@@ -11,7 +11,7 @@ import {
   transitionExoskeletonSession,
   type ExoskeletonEvent,
 } from '../../features/exoskeleton/session'
-import { effectiveStatus, setCheckInWithServerAck, useDemoState } from '../../store/store'
+import { effectiveStatus, recordGameStage, setCheckInWithServerAck, useDemoState } from '../../store/store'
 
 type SyncStatus = 'idle' | 'pending' | 'success' | 'failed'
 const STANDARD_CELEBRATION_MS = 2600
@@ -34,6 +34,8 @@ export function ExoskeletonView() {
   const submittedRef = useRef(alreadyComplete)
   const mountedRef = useRef(true)
   const actionButtonRefs = useRef<Array<HTMLButtonElement | null>>([])
+  const actionStartedAtRef = useRef<Date | null>(null)
+  const gameSessionIdRef = useRef(`game-${today}-${EXOSKELETON_TASK_ID}`)
   // 仅在尚未开练时接受外部完成态。训练中的本地流程优先，避免最后一次
   // 打卡的同步回流抢先盖掉最后一项的原地胜利反馈。
   const viewSession = alreadyComplete && session.phase === 'ready'
@@ -85,6 +87,12 @@ export function ExoskeletonView() {
     setVisibleActionIndex(viewSession.actionIndex)
   }, [viewSession.actionIndex])
 
+  useEffect(() => {
+    if (viewSession.phase === 'training' && !actionStartedAtRef.current) {
+      actionStartedAtRef.current = new Date()
+    }
+  }, [viewSession.actionIndex, viewSession.phase])
+
   if (!task) {
     return (
       <section className="card card-pad exo-empty">
@@ -95,6 +103,26 @@ export function ExoskeletonView() {
   }
 
   function send(event: ExoskeletonEvent) {
+    if ((event.type === 'ACTION_DONE' || event.type === 'STOP') && viewSession.phase === 'training') {
+      const completedAt = new Date()
+      const startedAt = actionStartedAtRef.current ?? completedAt
+      const action = EXOSKELETON_ACTIONS[viewSession.actionIndex]
+      recordGameStage({
+        sessionId: gameSessionIdRef.current,
+        taskId: EXOSKELETON_TASK_ID,
+        date: today,
+        actionId: action.id,
+        actionTitle: action.title,
+        actionIndex: viewSession.actionIndex,
+        startedAt: startedAt.toISOString(),
+        completedAt: completedAt.toISOString(),
+        durationSec: Math.max(1, Math.round((completedAt.getTime() - startedAt.getTime()) / 1000)),
+        pauseCount: 0,
+        retryCount: 0,
+        status: event.type === 'ACTION_DONE' ? 'completed' : 'stopped',
+      })
+      actionStartedAtRef.current = null
+    }
     const result = transitionExoskeletonSession(viewSession, event)
     setSession(result.state)
     if (result.effect === 'MARK_TODAY_DONE' && !submittedRef.current) {
@@ -118,6 +146,7 @@ export function ExoskeletonView() {
   }
 
   function startTraining() {
+    actionStartedAtRef.current = new Date()
     setMotionPlaying(!prefersReducedMotion)
     setFailedMotionIds(new Set())
     send({ type: 'START' })

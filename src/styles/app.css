@@ -1722,6 +1722,29 @@
   100% { background: transparent; }
 }
 
+/* 外骨骼互动游戏数据：沿用健康数据卡片体系，突出过程数据而非医疗结论。 */
+.game-summary { background: linear-gradient(135deg, var(--surface), var(--teal-50)); }
+.game-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 18px 0 14px; }
+.game-metrics > div { padding: 16px; border: 1px solid var(--teal-100); border-radius: var(--r); background: rgba(255,255,255,.8); }
+.game-metrics span { display: block; color: var(--ink-4); font-size: var(--t-xs); }
+.game-metrics strong { display: block; margin-top: 7px; color: var(--teal-800); font-size: var(--t-xl); }
+.game-stage-list { display: grid; margin-top: 12px; }
+.game-stage-row { display: grid; grid-template-columns: 46px minmax(0, 1fr) 100px 88px; gap: 14px; align-items: center; padding: 14px 0; border-top: 1px solid var(--line); }
+.game-stage-row:first-child { border-top: 0; }
+.game-stage-index { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; color: var(--teal-800); background: var(--teal-50); font-weight: 700; }
+.game-stage-name { display: grid; gap: 4px; }.game-stage-name strong { color: var(--ink); font-size: var(--t-base); }.game-stage-name small { color: var(--ink-3); font-size: var(--t-xs); }
+.game-stage-time { color: var(--ink); font-size: var(--t-md); font-weight: 650; }
+.game-stage-row[data-status='stopped'] .game-stage-time { color: var(--wait); }
+.game-history { display: grid; margin-top: 12px; }
+.game-history > div { display: grid; grid-template-columns: 90px minmax(0, 1fr) minmax(140px, 28%); align-items: center; gap: 16px; padding: 14px 0; border-top: 1px solid var(--line); }
+.game-history > div:first-child { border-top: 0; }.game-history time { color: var(--ink-3); font-size: var(--t-sm); }.game-history span { display: grid; gap: 3px; }.game-history strong { font-size: var(--t-sm); }.game-history small { color: var(--ink-4); font-size: var(--t-xs); }
+.game-history i { height: 8px; overflow: hidden; border-radius: 999px; background: linear-gradient(90deg, var(--teal-600) 0 var(--game-progress), var(--line) var(--game-progress)); }
+@media (max-width: 760px) {
+  .game-metrics { grid-template-columns: 1fr 1fr; }
+  .game-stage-row { grid-template-columns: 40px minmax(0, 1fr) auto; }.game-stage-time { grid-column: 2; }.game-stage-row .chip { grid-column: 3; grid-row: 1 / 3; }
+  .game-history > div { grid-template-columns: 72px 1fr; }.game-history i { grid-column: 1 / -1; }
+}
+
 /* 鼻饲液恒温监测：设备感的深色面板只作用于这个功能区，不改变家属端整体暖色皮肤。 */
 .feed-monitor {
   --feed-bg: #081523; --feed-panel: #0e1c2d; --feed-line: #22394f;

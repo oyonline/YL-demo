@@ -16,7 +16,7 @@ import type { Assessment, CareEvent, Medication } from '../../src/data/types.ts'
 import { hashPassword } from '../auth/password.ts'
 import {
   patient, taskDefs, videos, therapist,
-  PLAN_CONFIRMED_ON, HOMECARE_START, buildHistory, buildVitals,
+  PLAN_CONFIRMED_ON, HOMECARE_START, buildHistory, buildVitals, buildGameStageHistory,
 } from '../../src/data/seed.ts'
 import { VIDEO_STEPS } from '../../src/data/videoSteps.ts'
 import { CARE_ALERTS, GUIDANCE } from '../../src/data/guidance.ts'
@@ -42,7 +42,7 @@ const db = getDb()
 // 清空顺序与外键依赖相反
 const TABLES = [
   'audit_log', 'kb_search_log',
-  'escalations', 'guidances', 'messages', 'uploads', 'vitals', 'check_ins',
+  'escalations', 'guidances', 'messages', 'uploads', 'game_stage_records', 'vitals', 'check_ins',
   'preset_qa', 'guidance_articles', 'video_steps', 'reminders', 'task_defs', 'videos',
   'care_events', 'admissions', 'assessments', 'medications',
   'patient_contact', 'patient_goals', 'patient_function', 'patient_diagnosis',
@@ -231,6 +231,16 @@ const seed = db.transaction(() => {
     insV.run(v.id, v.patientId, v.date, v.time, v.systolic, v.diastolic, v.by, v.at)
   }
 
+  const insGame = db.prepare(`INSERT INTO game_stage_records
+    (id,patient_id,session_id,task_id,date,action_id,action_title,action_index,
+     started_at,completed_at,duration_sec,pause_count,retry_count,status)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,'completed')`)
+  for (const game of buildGameStageHistory(today, p.id)) {
+    insGame.run(game.id, game.patientId, game.sessionId, game.taskId, game.date,
+      game.actionId, game.actionTitle, game.actionIndex, game.startedAt, game.completedAt,
+      game.durationSec, game.pauseCount, game.retryCount)
+  }
+
   /* ---------- 知识库集合 ---------- */
   // OR IGNORE：集合的 enabled 与 disclaimer 是运维可调的状态
   // （政策集合的开关就是用户裁决过的），重灌演示数据不该把它们冲回默认值。
@@ -266,7 +276,7 @@ if (process.argv[1] && import.meta.url.endsWith(basename(process.argv[1]))) {
   console.log('种子灌入完成：')
   for (const t of ['users','patients','patient_members','medications','assessments','care_events',
                    'videos','video_steps','task_defs','reminders','guidance_articles','preset_qa',
-                   'check_ins','vitals','kb_collections']) {
+                   'check_ins','vitals','game_stage_records','kb_collections']) {
     console.log(`  ${t.padEnd(20)} ${count(t)}`)
   }
   closeDb()

@@ -28,6 +28,14 @@ export const toVital = (r: any) => ({
   systolic: r.systolic, diastolic: r.diastolic, by: r.by, at: r.at,
 })
 
+export const toGameStage = (r: any) => ({
+  id: r.id, patientId: r.patient_id, sessionId: r.session_id, taskId: r.task_id,
+  date: r.date, actionId: r.action_id, actionTitle: r.action_title,
+  actionIndex: r.action_index, startedAt: r.started_at, completedAt: r.completed_at,
+  durationSec: r.duration_sec, pauseCount: r.pause_count, retryCount: r.retry_count,
+  status: r.status,
+})
+
 export const toUpload = (r: any) => ({
   id: r.id, patientId: r.patient_id, taskId: r.task_id, date: r.date,
   filename: r.filename, sizeLabel: r.size_label, uploadedAt: r.uploaded_at,

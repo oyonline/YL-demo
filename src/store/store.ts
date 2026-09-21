@@ -20,17 +20,17 @@
  */
 
 import { useSyncExternalStore } from 'react'
-import type { CheckIn, CheckInStatus, ChatMessage, DemoState, Escalation, Guidance, TaskDef, VideoUpload, VitalRecord } from '../data/types'
+import type { CheckIn, CheckInStatus, ChatMessage, DemoState, Escalation, GameStageRecord, Guidance, TaskDef, VideoUpload, VitalRecord } from '../data/types'
 import { isBpAbnormal, toISODate } from '../data/seed'
 import { authFetch, SessionExpiredError } from '../auth/auth'
 
 /** schemaVersion 保留只为不改 DemoState 契约；版本迁移已交给数据库迁移脚本 */
-const SCHEMA_VERSION = 7
+const SCHEMA_VERSION = 8
 
 function emptyState(): DemoState {
   return {
     schemaVersion: SCHEMA_VERSION,
-    checkIns: [], vitals: [], uploads: [], messages: [], guidances: [], escalations: [],
+    checkIns: [], vitals: [], gameStages: [], uploads: [], messages: [], guidances: [], escalations: [],
   }
 }
 
@@ -365,6 +365,21 @@ export function addVital(systolic: number, diastolic: number, by: VitalRecord['b
   emit()
   void push(`/api/patients/${patientId}/vitals`, 'POST', { id: rec.id, systolic, diastolic, by })
   return rec
+}
+
+export function recordGameStage(input: Omit<GameStageRecord, 'id' | 'patientId'>) {
+  const id = `${input.sessionId}-${input.actionId}`
+  const record: GameStageRecord = { ...input, id, patientId }
+  const existing = cache.gameStages.some((item) => item.id === id)
+  cache = {
+    ...cache,
+    gameStages: existing
+      ? cache.gameStages.map((item) => item.id === id ? record : item)
+      : [...cache.gameStages, record],
+  }
+  emit()
+  void push(`/api/patients/${patientId}/game-stages`, 'POST', record)
+  return record
 }
 
 /** 排练用：一键回到演示初始状态 */

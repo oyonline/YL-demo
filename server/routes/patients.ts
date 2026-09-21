@@ -12,9 +12,9 @@ import { Router } from 'express'
 import { getDb } from '../db/index.ts'
 import { requireAuth, requireRole, requirePatientAccess, visiblePatientIds } from '../auth/middleware.ts'
 import { publish, addClient } from '../events/bus.ts'
-import { toCheckIn, toVital, toUpload, toMessage, toGuidance, toEscalation,
+import { toCheckIn, toVital, toGameStage, toUpload, toMessage, toGuidance, toEscalation,
          toPatient, toTaskDef, toReminder } from './mappers.ts'
-import { buildHistory, buildVitals, isBpAbnormal } from '../../src/data/seed.ts'
+import { buildGameStageHistory, buildHistory, buildVitals, isBpAbnormal } from '../../src/data/seed.ts'
 
 export const patientsRouter = Router()
 
@@ -141,6 +141,7 @@ patientsRouter.get('/:id/state', requireAuth, requirePatientAccess(), (req, res)
   res.json({
     checkIns: (db.prepare('SELECT * FROM check_ins WHERE patient_id = ? ORDER BY date, task_id').all(id) as any[]).map(toCheckIn),
     vitals: (db.prepare('SELECT * FROM vitals WHERE patient_id = ? ORDER BY at').all(id) as any[]).map(toVital),
+    gameStages: (db.prepare('SELECT * FROM game_stage_records WHERE patient_id = ? ORDER BY completed_at').all(id) as any[]).map(toGameStage),
     uploads: (db.prepare('SELECT * FROM uploads WHERE patient_id = ? ORDER BY uploaded_at').all(id) as any[]).map(toUpload),
     messages: (db.prepare('SELECT * FROM messages WHERE patient_id = ? ORDER BY at').all(id) as any[]).map(toMessage),
     guidances: (db.prepare('SELECT * FROM guidances WHERE patient_id = ? ORDER BY at').all(id) as any[]).map(toGuidance),
@@ -275,6 +276,36 @@ patientsRouter.post('/:id/vitals', requireAuth, requirePatientAccess(), (req, re
     .run(id, patientId, bDate, time, systolic, diastolic, by ?? '家属', t.toISOString(), req.user!.sub)
   publish(patientId, 'vital')
   res.json(toVital(db.prepare('SELECT * FROM vitals WHERE id = ?').get(id)))
+})
+
+patientsRouter.post('/:id/game-stages', requireAuth, requirePatientAccess(), (req, res) => {
+  const db = getDb()
+  const patientId = one(req.params.id)
+  const {
+    id, sessionId, taskId, date, actionId, actionTitle, actionIndex,
+    startedAt, completedAt, durationSec, pauseCount, retryCount, status,
+  } = req.body ?? {}
+  if (
+    typeof id !== 'string' || typeof sessionId !== 'string' || typeof taskId !== 'string' ||
+    typeof date !== 'string' || typeof actionId !== 'string' || typeof actionTitle !== 'string' ||
+    !Number.isInteger(actionIndex) || !Number.isFinite(durationSec) ||
+    typeof startedAt !== 'string' || typeof completedAt !== 'string' ||
+    !['completed', 'stopped'].includes(status)
+  ) {
+    return res.status(400).json({ error: 'bad_request', message: '互动游戏阶段记录不完整' })
+  }
+  const task = db.prepare('SELECT id FROM task_defs WHERE id = ? AND patient_id = ?').get(taskId, patientId)
+  if (!task) return res.status(404).json({ error: 'task_not_found', message: '该患者没有此训练任务' })
+  db.prepare(`INSERT OR REPLACE INTO game_stage_records
+    (id,patient_id,session_id,task_id,date,action_id,action_title,action_index,
+     started_at,completed_at,duration_sec,pause_count,retry_count,status,recorded_by)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
+    .run(id, patientId, sessionId, taskId, date, actionId, actionTitle, actionIndex,
+      startedAt, completedAt, Math.max(1, Math.round(durationSec)),
+      Number.isInteger(pauseCount) ? pauseCount : 0,
+      Number.isInteger(retryCount) ? retryCount : 0, status, req.user!.sub)
+  publish(patientId, 'game-stage')
+  res.json(toGameStage(db.prepare('SELECT * FROM game_stage_records WHERE id = ?').get(id)))
 })
 
 /** 模拟上传：只记元数据，同时把当天该任务的打卡关联到这次上传 */
@@ -442,7 +473,7 @@ patientsRouter.post('/:id/reset', requireAuth, requirePatientAccess(), (req, res
   }
   const today = new Date()
   db.transaction(() => {
-    for (const t of ['escalations', 'guidances', 'messages', 'uploads', 'vitals', 'check_ins']) {
+    for (const t of ['escalations', 'guidances', 'messages', 'uploads', 'game_stage_records', 'vitals', 'check_ins']) {
       db.prepare(`DELETE FROM ${t} WHERE patient_id = ?`).run(patientId)
     }
     const ci = db.prepare(`INSERT INTO check_ins (id,patient_id,task_id,date,status,note,at) VALUES (?,?,?,?,?,?,?)`)
@@ -452,6 +483,15 @@ patientsRouter.post('/:id/reset', requireAuth, requirePatientAccess(), (req, res
     const v = db.prepare(`INSERT INTO vitals (id,patient_id,date,time,systolic,diastolic,by,at) VALUES (?,?,?,?,?,?,?,?)`)
     for (const rec of buildVitals(today)) {
       v.run(rec.id, patientId, rec.date, rec.time, rec.systolic, rec.diastolic, rec.by, rec.at)
+    }
+    const game = db.prepare(`INSERT INTO game_stage_records
+      (id,patient_id,session_id,task_id,date,action_id,action_title,action_index,
+       started_at,completed_at,duration_sec,pause_count,retry_count,status)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,'completed')`)
+    for (const rec of buildGameStageHistory(today, patientId)) {
+      game.run(rec.id, rec.patientId, rec.sessionId, rec.taskId, rec.date,
+        rec.actionId, rec.actionTitle, rec.actionIndex, rec.startedAt, rec.completedAt,
+        rec.durationSec, rec.pauseCount, rec.retryCount)
     }
   })()
   publish(patientId, 'reset')

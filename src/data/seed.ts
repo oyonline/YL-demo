@@ -10,7 +10,7 @@
  * - 标注 SYNTHETIC 的字段是甲方未提供、为叙事完整而虚构的，勿当作甲方数据引用。
  */
 
-import type { Patient, TaskDef, VideoAsset, Therapist, CheckIn, ISODate, RosterEntry, VitalRecord } from './types'
+import type { Patient, TaskDef, VideoAsset, Therapist, CheckIn, GameStageRecord, ISODate, RosterEntry, VitalRecord } from './types'
 
 export const PATIENT_ID = 'p-001'
 
@@ -359,4 +359,39 @@ export function isBpAbnormal(v: { systolic: number; diastolic: number }): boolea
 export function buildVitals(today: Date): VitalRecord[] {
   void today
   return []
+}
+
+/** 三次固定的互动游戏历史，供初次演示与“重置演示”恢复使用。 */
+export function buildGameStageHistory(today: Date, patientId = PATIENT_ID): GameStageRecord[] {
+  const actions = [
+    ['march-warmup', '踏步热身'], ['side-step', '左右侧步'],
+    ['walking-transition', '前后侧步'], ['arm-step', '上肢拍手'],
+    ['arm-cross', '上肢拍肩'], ['reach-march', '上肢交替拍手肘'],
+  ] as const
+  const durationSets = [[128, 112, 134, 96, 103, 141], [121, 106, 126, 91, 98, 132], [116, 101, 118, 87, 94, 124]]
+  return durationSets.flatMap((durations, dayIndex) => {
+    const date = new Date(today)
+    date.setDate(date.getDate() - (3 - dayIndex))
+    const dateISO = toISODate(date)
+    return actions.map(([actionId, actionTitle], actionIndex) => {
+      const start = new Date(`${dateISO}T16:${String(actionIndex * 3).padStart(2, '0')}:00+08:00`)
+      const durationSec = durations[actionIndex]
+      return {
+        id: `game-demo-${dayIndex}-${actionIndex}`,
+        patientId,
+        sessionId: `game-demo-${dayIndex}`,
+        taskId: 'task-cognition',
+        date: dateISO,
+        actionId,
+        actionTitle,
+        actionIndex,
+        startedAt: start.toISOString(),
+        completedAt: new Date(start.getTime() + durationSec * 1000).toISOString(),
+        durationSec,
+        pauseCount: 0,
+        retryCount: dayIndex === 0 && actionIndex === 2 ? 1 : 0,
+        status: 'completed' as const,
+      }
+    })
+  })
 }

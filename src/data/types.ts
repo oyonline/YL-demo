@@ -304,10 +304,29 @@ export interface VitalRecord {
   at: ISODateTime
 }
 
+/** 外骨骼互动游戏的逐阶段执行记录。只记录客观过程，不生成动作质量评分。 */
+export interface GameStageRecord {
+  id: string
+  patientId: string
+  sessionId: string
+  taskId: string
+  date: ISODate
+  actionId: string
+  actionTitle: string
+  actionIndex: number
+  startedAt: ISODateTime
+  completedAt: ISODateTime
+  durationSec: number
+  pauseCount: number
+  retryCount: number
+  status: 'completed' | 'stopped'
+}
+
 export interface DemoState {
   schemaVersion: number
   checkIns: CheckIn[]
   vitals: VitalRecord[]
+  gameStages: GameStageRecord[]
   uploads: VideoUpload[]
   messages: ChatMessage[]
   guidances: Guidance[]

@@ -5,6 +5,7 @@ import { usePatientData } from '../../data/context'
 import { addVital, useDemoState } from '../../store/store'
 import { BpChart } from '../../components/BpChart'
 import { IconAlert, IconCheck, IconHeart } from '../../components/Icons'
+import { EXOSKELETON_ACTIONS } from '../../features/exoskeleton/session'
 
 /**
  * 健康数据（甲方需求书 3.5）。
@@ -17,7 +18,7 @@ import { IconAlert, IconCheck, IconHeart } from '../../components/Icons'
  * 不判断高血压分级，更不建议加药。
  */
 export function VitalsView() {
-  const [tab, setTab] = useState<'blood-pressure' | 'feeding'>('blood-pressure')
+  const [tab, setTab] = useState<'blood-pressure' | 'feeding' | 'game'>('blood-pressure')
 
   return (
     <div className="stack">
@@ -40,10 +41,120 @@ export function VitalsView() {
         >
           鼻饲液监测
         </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'game'}
+          className="vitals-tab"
+          onClick={() => setTab('game')}
+        >
+          互动游戏数据
+        </button>
       </div>
-      {tab === 'blood-pressure' ? <BloodPressurePanel /> : <FeedingMonitor />}
+      {tab === 'blood-pressure'
+        ? <BloodPressurePanel />
+        : tab === 'feeding'
+          ? <FeedingMonitor />
+          : <GameDataPanel />}
     </div>
   )
+}
+
+function GameDataPanel() {
+  const state = useDemoState()
+  const gameStages = state.gameStages ?? []
+  const today = new Date().toLocaleDateString('sv-SE')
+  const sessions = [...gameStages]
+    .sort((a, b) => a.completedAt.localeCompare(b.completedAt))
+    .reduce<Record<string, typeof state.gameStages>>((groups, record) => {
+      ;(groups[record.sessionId] ??= []).push(record)
+      return groups
+    }, {})
+  const sessionList = Object.values(sessions).sort((a, b) => b[0].date.localeCompare(a[0].date))
+  const latest = sessionList[0] ?? []
+  const todayRecords = gameStages.filter((record) => record.date === today)
+  const current = todayRecords.length ? todayRecords : latest
+  const completed = current.filter((record) => record.status === 'completed')
+  const totalSec = completed.reduce((sum, record) => sum + record.durationSec, 0)
+
+  return (
+    <div className="game-data stack">
+      <section className="card card-pad game-summary">
+        <div className="card-hd">
+          <div>
+            <div className="eyebrow">互动游戏数据</div>
+            <h2 className="card-title">外骨骼六阶段训练</h2>
+          </div>
+          <span className="chip chip-ok">自动记录</span>
+        </div>
+        <div className="game-metrics">
+          <GameMetric label="完成阶段" value={`${completed.length} / ${EXOSKELETON_ACTIONS.length}`} />
+          <GameMetric label="训练总用时" value={formatDuration(totalSec)} />
+          <GameMetric label="平均每阶段" value={completed.length ? formatDuration(Math.round(totalSec / completed.length)) : '—'} />
+          <GameMetric label="最近训练" value={current[0]?.date ? formatShortDate(current[0].date) : '暂无'} />
+        </div>
+        <p className="card-note">数据从每个阶段开始训练起计时，动作完成或中止时自动保存；仅呈现训练过程，不作动作质量或康复效果判断。</p>
+      </section>
+
+      <section className="card card-pad">
+        <div className="card-hd">
+          <div>
+            <div className="eyebrow">阶段明细</div>
+            <h2 className="card-title" style={{ fontSize: 'var(--t-md)' }}>{current[0]?.date === today ? '今日训练' : '最近一次训练'}</h2>
+          </div>
+          <span className="card-note">{completed.length} 个阶段已完成</span>
+        </div>
+        <div className="game-stage-list">
+          {EXOSKELETON_ACTIONS.map((action, index) => {
+            const record = current.find((item) => item.actionId === action.id)
+            return (
+              <div className="game-stage-row" key={action.id} data-status={record?.status ?? 'pending'}>
+                <span className="game-stage-index num">{String(index + 1).padStart(2, '0')}</span>
+                <span className="game-stage-name"><strong>{action.title}</strong><small>{action.instruction}</small></span>
+                <span className="game-stage-time num">{record ? formatDuration(record.durationSec) : '—'}</span>
+                <span className={record?.status === 'completed' ? 'chip chip-ok' : 'chip'}>
+                  {record?.status === 'completed' ? '识别成功' : record?.status === 'stopped' ? '中途停止' : '待训练'}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+      </section>
+
+      <section className="card card-pad">
+        <div className="eyebrow">历史训练</div>
+        <div className="game-history">
+          {sessionList.length === 0 && <div className="card-note">暂无训练记录</div>}
+          {sessionList.slice(0, 8).map((records) => {
+            const done = records.filter((record) => record.status === 'completed')
+            const seconds = done.reduce((sum, record) => sum + record.durationSec, 0)
+            return (
+              <div key={records[0].sessionId}>
+                <time>{formatShortDate(records[0].date)}</time>
+                <span><strong>{done.length} / {EXOSKELETON_ACTIONS.length} 阶段</strong><small>训练总用时 {formatDuration(seconds)}</small></span>
+                <i style={{ '--game-progress': `${done.length / EXOSKELETON_ACTIONS.length * 100}%` } as React.CSSProperties} />
+              </div>
+            )
+          })}
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function GameMetric({ label, value }: { label: string; value: string }) {
+  return <div><span>{label}</span><strong className="num">{value}</strong></div>
+}
+
+function formatDuration(seconds: number) {
+  if (seconds < 60) return `${seconds} 秒`
+  const minutes = Math.floor(seconds / 60)
+  const rest = seconds % 60
+  return `${minutes}分${String(rest).padStart(2, '0')}秒`
+}
+
+function formatShortDate(date: string) {
+  return `${Number(date.slice(5, 7))}月${Number(date.slice(8, 10))}日`
 }
 
 function BloodPressurePanel() {

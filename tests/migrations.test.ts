@@ -26,6 +26,7 @@ describe('数据库迁移', () => {
       '0005_exoskeleton_six_animations.sql',
       '0006_monthly_diet_guidance.sql',
       '0007_replace_preset_qa_with_enteral_three.sql',
+      '0008_game_stage_records.sql',
     ])
   })
 
@@ -61,7 +62,7 @@ describe('数据库迁移', () => {
     expect(`${task.instruction}${task.reps}${reminder.text}`).not.toContain('四步')
   })
 
-  it('28 张业务表全部建出', () => {
+  it('29 张业务表全部建出', () => {
     const rows = getDb()
       .prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'`)
       .all() as any[]
@@ -69,7 +70,7 @@ describe('数据库迁移', () => {
     // 抽查每个子系统的关键表，缺一个就说明该子系统的迁移没跑
     for (const t of [
       'users', 'patients', 'patient_members',       // 鉴权与行级权限
-      'check_ins', 'vitals', 'messages',            // 演示主线
+      'check_ins', 'vitals', 'game_stage_records', 'messages', // 演示主线
       'kb_documents', 'kb_chunks',                  // 知识库
       'audit_log',                                  // 审计
     ]) {

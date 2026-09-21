@@ -12,7 +12,7 @@
 import type { Response } from 'express'
 
 export type ChangeKind =
-  | 'checkin' | 'vital' | 'upload' | 'message' | 'guidance' | 'escalation' | 'reset'
+  | 'checkin' | 'vital' | 'game-stage' | 'upload' | 'message' | 'guidance' | 'escalation' | 'reset'
 
 interface Client {
   id: number
