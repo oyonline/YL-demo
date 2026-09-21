@@ -13,8 +13,9 @@ function dispatch(state: ExoskeletonSession, type: 'START' | 'ACTION_DONE' | 'CO
 describe('外骨骼六步训练状态机', () => {
   it('动作顺序固定为本轮确认的六项', () => {
     expect(EXOSKELETON_ACTIONS.map((action) => action.title)).toEqual([
-      '踏步热身', '左右侧步', '步态衔接', '上肢开合配合踏步', '双臂交叉', '交替伸臂配合抬腿',
+      '踏步热身', '左右侧步', '前后侧步', '上肢拍手', '上肢拍肩', '上肢交替拍手肘',
     ])
+    expect(EXOSKELETON_ACTIONS.every((action) => action.encouragement.length > 0)).toBe(true)
   })
 
   it('只有第六个动作确认后才产生一次今日打卡', () => {

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { IconAlert, IconCheck, IconHome, IconPlay, IconShield } from '../../components/Icons'
+import { CelebrationCanvas } from '../../components/CelebrationCanvas'
 import { usePatientData } from '../../data/context'
 import { toISODate } from '../../data/seed'
 import {
@@ -13,6 +14,8 @@ import {
 import { effectiveStatus, setCheckInWithServerAck, useDemoState } from '../../store/store'
 
 type SyncStatus = 'idle' | 'pending' | 'success' | 'failed'
+const STANDARD_CELEBRATION_MS = 2600
+const FINAL_CELEBRATION_MS = 3000
 
 export function ExoskeletonView() {
   const { patient, taskDefs } = usePatientData()
@@ -42,6 +45,8 @@ export function ExoskeletonView() {
     ? EXOSKELETON_ACTIONS.length - 1
     : viewSession.actionIndex
   const showingCurrentAction = visibleActionIndex === viewSession.actionIndex
+  const celebrationLevel = viewSession.actionIndex + 1
+  const celebrationAction = EXOSKELETON_ACTIONS[viewSession.actionIndex]
 
   useEffect(() => {
     mountedRef.current = true
@@ -50,12 +55,12 @@ export function ExoskeletonView() {
   }, [])
 
   useEffect(() => {
-    if (viewSession.phase !== 'celebrating' || finishedAllActions) return
+    if (viewSession.phase !== 'celebrating') return
     const timer = window.setTimeout(() => {
       setMotionPlaying(!prefersReducedMotion)
       setFailedMotionIds(new Set())
       setSession((current) => transitionExoskeletonSession(current, { type: 'CONTINUE' }).state)
-    }, 3000)
+    }, finishedAllActions ? FINAL_CELEBRATION_MS : STANDARD_CELEBRATION_MS)
     return () => window.clearTimeout(timer)
   }, [finishedAllActions, prefersReducedMotion, viewSession.actionIndex, viewSession.phase])
 
@@ -121,25 +126,26 @@ export function ExoskeletonView() {
   return (
     <div className="exo-view exo-onepage">
       {viewSession.phase === 'celebrating' && (
-        <div className="exo-screen-celebration" role="status" aria-live="assertive">
-          <div className="exo-screen-confetti" aria-hidden="true">
-            {Array.from({ length: 96 }, (_, piece) => (
-              <i
-                key={piece}
-                style={{
-                  '--confetti-x': piece % 2 === 0 ? '11vw' : '89vw',
-                  '--confetti-y': `${78 + (piece % 5) * 2}vh`,
-                  '--confetti-delay': `${(piece % 12) * 0.035}s`,
-                  '--confetti-burst-x': `${(piece % 2 === 0 ? 1 : -1) * (8 + (piece * 13) % 58)}vw`,
-                  '--confetti-burst-y': `${-(22 + (piece * 17) % 58)}vh`,
-                  '--confetti-turn': `${540 + (piece % 5) * 135}deg`,
-                } as CSSProperties}
-              />
-            ))}
-          </div>
-          {(['is-left', 'is-right'] as const).map((side) => (
+        <div
+          className={`exo-screen-celebration${finishedAllActions ? ' is-final' : ''}`}
+          data-level={celebrationLevel}
+          role="status"
+          aria-live="assertive"
+        >
+          {finishedAllActions && <span className="exo-grand-flash" aria-hidden="true"><i /><i /><i /></span>}
+          <video
+            key={`${viewSession.actionIndex}-${finishedAllActions ? 'final' : 'standard'}`}
+            className={`exo-effect-video ${finishedAllActions ? 'is-fireworks' : 'is-confetti'}`}
+            src={finishedAllActions ? '/effects/stage-6-fireworks-pixabay.webm?v=1' : '/effects/stage-1-5-confetti-pixabay.webm?v=1'}
+            autoPlay
+            playsInline
+            preload="auto"
+            aria-hidden="true"
+          />
+          <CelebrationCanvas level={celebrationLevel} finalStage={finishedAllActions} />
+          {finishedAllActions && (['is-left', 'is-right'] as const).map((side) => (
             <span className={`exo-side-spray ${side}`} aria-hidden="true" key={side}>
-              {Array.from({ length: 18 }, (_, piece) => (
+              {Array.from({ length: 6 + celebrationLevel * 3 }, (_, piece) => (
                 <i
                   key={piece}
                   style={{
@@ -151,8 +157,8 @@ export function ExoskeletonView() {
               ))}
             </span>
           ))}
-          <span className="exo-party-cannon is-left" aria-hidden="true"><i /><b /><em /></span>
-          <span className="exo-party-cannon is-right" aria-hidden="true"><i /><b /><em /></span>
+          {finishedAllActions && <span className="exo-party-cannon is-left" aria-hidden="true"><i /><b /><em /></span>}
+          {finishedAllActions && <span className="exo-party-cannon is-right" aria-hidden="true"><i /><b /><em /></span>}
           <div className="exo-screen-praise">
             <span className="exo-praise-rays" aria-hidden="true" />
             <span className="exo-praise-thumb" aria-hidden="true">
@@ -161,9 +167,9 @@ export function ExoskeletonView() {
                 <path d="M3.2 10.2h4.3v10H3.2a1.4 1.4 0 0 1-1.4-1.4v-7.2a1.4 1.4 0 0 1 1.4-1.4Z" />
               </svg>
             </span>
-            <span className="exo-praise-kicker">完成一项挑战</span>
-            <strong>太棒了！做得真好！</strong>
-            <span>继续保持，你正在一步步变得更棒</span>
+            <span className="exo-praise-kicker">{finishedAllActions ? '六项挑战全部完成' : `完成第 ${celebrationLevel} 阶段`}</span>
+            <strong>{celebrationAction.encouragement}</strong>
+            <span>{finishedAllActions ? '今日律动训练顺利通关' : '即将自动进入下一环节'}</span>
           </div>
         </div>
       )}
@@ -388,12 +394,12 @@ export function ExoskeletonView() {
                   {celebrating && (
                     <div className="exo-inline-win" role="status" aria-live="assertive">
                       <div className="exo-confetti" aria-hidden="true">
-                        {Array.from({ length: 16 }, (_, piece) => <i key={piece} />)}
+                        {Array.from({ length: 8 + celebrationLevel * 4 }, (_, piece) => <i key={piece} />)}
                       </div>
                       <span className="exo-win-burst" aria-hidden="true"><i /><i /></span>
                       <span className="exo-inline-win-mark"><IconCheck size={25} /></span>
                       <div>
-                        <strong>太棒了，{item.title}完成！</strong>
+                        <strong>{item.encouragement}</strong>
                         <span className="num">已完成 {viewSession.completedCount} / {EXOSKELETON_ACTIONS.length}</span>
                       </div>
                       <span className="exo-win-reward" aria-hidden="true">+1 <small>完成</small></span>
