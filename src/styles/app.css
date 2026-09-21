@@ -1005,12 +1005,12 @@
 }
 .exo-effect-video { position: absolute; inset: 0; z-index: 3; width: 100%; height: 100%; pointer-events: none; }
 .exo-effect-video.is-confetti {
-  object-fit: contain; object-position: center; opacity: .98;
-  transform: scale(.96); transform-origin: center;
+  object-fit: cover; object-position: center; opacity: .98;
+  transform: scale(1.02); transform-origin: center;
 }
-.exo-effect-video.is-fireworks {
+.exo-effect-video.is-final-confetti {
   object-fit: contain; object-position: center;
-  filter: saturate(1.08) contrast(1.05); transform: scale(.92);
+  filter: saturate(1.08) contrast(1.05); transform: scale(.96);
 }
 .exo-celebration-canvas { position: absolute; inset: 0; z-index: 4; width: 100%; height: 100%; opacity: .62; }
 .exo-screen-celebration.is-final .exo-celebration-canvas { opacity: .72; }

@@ -135,9 +135,12 @@ export function ExoskeletonView() {
           {finishedAllActions && <span className="exo-grand-flash" aria-hidden="true"><i /><i /><i /></span>}
           <video
             key={`${viewSession.actionIndex}-${finishedAllActions ? 'final' : 'standard'}`}
-            className={`exo-effect-video ${finishedAllActions ? 'is-fireworks' : 'is-confetti'}`}
-            src={finishedAllActions ? '/effects/stage-6-fireworks-pixabay.webm?v=1' : '/effects/stage-1-5-confetti-xmas-alpha.webm?v=4'}
+            className={`exo-effect-video ${finishedAllActions ? 'is-final-confetti' : 'is-confetti'}`}
+            src={finishedAllActions
+              ? '/effects/stage-1-5-confetti-xmas-alpha.webm?v=4'
+              : '/effects/stage-1-5-confetti-121983-alpha.webm?v=1'}
             autoPlay
+            muted
             playsInline
             preload="auto"
             aria-hidden="true"
