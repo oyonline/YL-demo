@@ -338,7 +338,7 @@ export function ExoskeletonView() {
             return (
               <article
                 key={item.id}
-                className={`exo-step-card${item.animatedSrc ? ' is-game-demo' : ''}${done ? ' is-done' : ''}${current ? ' is-current' : ''}${celebrating ? ' is-celebrating' : ''}${stoppedHere ? ' is-stopped' : ''}`}
+                className={`exo-step-card${item.animatedSrc || item.videoSrc ? ' is-game-demo' : ''}${done ? ' is-done' : ''}${current ? ' is-current' : ''}${celebrating ? ' is-celebrating' : ''}${stoppedHere ? ' is-stopped' : ''}`}
                 aria-labelledby={`exo-action-${item.id}`}
               >
                 <header className="exo-step-head">
@@ -362,14 +362,15 @@ export function ExoskeletonView() {
                   ) : showMotion && item.videoSrc ? (
                     <video
                       key={`${item.id}-motion`}
+                      className={imageClassName}
                       src={item.videoSrc}
                       poster={item.stillSrc}
                       autoPlay
                       muted
+                      loop
                       playsInline
-                      aria-label={`${item.title}真人动作示范`}
-                      onError={() => setMotionPlaying(false)}
-                      onEnded={() => setMotionPlaying(false)}
+                      aria-label={`${item.title}动作示范`}
+                      onError={() => setFailedMotionIds((currentIds) => new Set(currentIds).add(item.id))}
                     />
                   ) : (
                     <img
@@ -379,7 +380,7 @@ export function ExoskeletonView() {
                       alt={`${item.title}动作定格示范`}
                     />
                   )}
-                  {item.animatedSrc && (
+                  {(item.animatedSrc || item.videoSrc) && (
                     <span className="exo-game-badge"><b>✦</b> 节奏跟练</span>
                   )}
                   <span className="exo-step-direction" aria-hidden="true">{item.direction}</span>

@@ -24,8 +24,8 @@ export const EXOSKELETON_ACTIONS: readonly ExoskeletonAction[] = [
     direction: '↑',
     instruction: '跟随角色交替抬腿踏步，配合节奏热身。',
     encouragement: '真棒！热身做得很到位，继续加油！',
-    animatedSrc: '/exoskeleton/march-game-v3.png',
-    stillSrc: '/exoskeleton/march-game-poster-v3.jpg',
+    videoSrc: '/videos/march-cartoon-refined-v1.mp4',
+    stillSrc: '/exoskeleton/march-cartoon-refined-poster-v1.jpg',
   },
   {
     id: 'side-step',
