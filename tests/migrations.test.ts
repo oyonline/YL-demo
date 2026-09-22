@@ -6,6 +6,7 @@
  */
 import { describe, it, expect, afterAll } from 'vitest'
 import { getDb, closeDb, DB_PATH } from '../server/db/index.ts'
+import { patientListQuery } from '../server/routes/patients.ts'
 
 afterAll(() => closeDb())
 
@@ -30,7 +31,83 @@ describe('数据库迁移', () => {
       '0009_wang_ping_profile.sql',
       '0010_wang_ping_care_alert.sql',
       '0011_seed_blood_pressure_history.sql',
+      '0012_add_training_videos.sql',
+      '0013_september_feeding_plan.sql',
+      '0014_simulate_september_checkins.sql',
     ])
+  })
+
+  it('0012 会为既有数据库追加四条训练视频', () => {
+    const rows = getDb().prepare(`SELECT id, title, category, duration_sec
+      FROM videos ORDER BY sort_order`).all() as any[]
+    expect(rows).toEqual([
+      { id: 'v-swallow-training', title: '吞咽训练', category: '吞咽康复类', duration_sec: 15 },
+      { id: 'v-limb-rehab-exercise', title: '肢体康复训练操', category: '肢体训练类', duration_sec: 50 },
+      { id: 'v-fruit-meal', title: '水果餐制作', category: '基础照护类', duration_sec: 31 },
+      { id: 'v-tube-feeding', title: '鼻饲管进食', category: '基础照护类', duration_sec: 38 },
+    ])
+  })
+
+  it('0014 为已有病例补历史并保留同日同任务的原记录', () => {
+    const db = getDb()
+    const now = new Date().toISOString()
+    db.prepare(`INSERT INTO patients (id,name,gender,age_band,status,created_at,updated_at)
+      VALUES ('p-001','迁移测试病例','女','演示','active',?,?)`).run(now, now)
+
+    const tasks = [
+      ['task-feed-meal-1', 'record', '正餐1', '07:00'],
+      ['task-feed-medication', 'medication', '鼻饲后给予降压药', '07:30'],
+      ['task-feed-meal-2', 'record', '正餐2', '11:00'],
+      ['task-feed-snack-1', 'record', '辅食加餐1', '13:00'],
+      ['task-feed-meal-3', 'record', '正餐3', '15:00'],
+      ['task-feed-snack-2', 'record', '辅食加餐2', '17:00'],
+      ['task-feed-meal-4', 'record', '正餐4', '19:00'],
+    ] as const
+    const insertTask = db.prepare(`INSERT INTO task_defs
+      (id,patient_id,kind,title,scheduled_time,instruction,cautions,origin,active_from,active_to)
+      VALUES (?,'p-001',?,?,?,'演示','[]','user_provided','2026-09-01','2026-09-28')`)
+    for (const task of tasks) insertTask.run(...task)
+
+    db.prepare(`INSERT INTO check_ins
+      (id,patient_id,task_id,date,status,note,at)
+      VALUES ('ci-existing','p-001','task-feed-meal-1','2026-09-01','done','原有记录','2026-09-01T07:05:00+08:00')`).run()
+    db.prepare("DELETE FROM schema_migrations WHERE name = '0014_simulate_september_checkins.sql'").run()
+
+    closeDb()
+    const migrated = getDb()
+    const rows = migrated.prepare(`SELECT date, task_id, status, note, at
+      FROM check_ins WHERE patient_id='p-001' ORDER BY date, task_id`).all() as any[]
+    expect(rows).toHaveLength(126)
+    expect(migrated.prepare("SELECT id, note, at FROM check_ins WHERE date='2026-09-01' AND task_id='task-feed-meal-1'").get()).toEqual({
+      id: 'ci-existing', note: '原有记录', at: '2026-09-01T07:05:00+08:00',
+    })
+    expect(migrated.prepare(`SELECT
+      sum(status='done') done, sum(status='difficulty') difficulty, sum(status='missed') missed
+      FROM check_ins WHERE date='2026-09-03'`).get()).toEqual({ done: 5, difficulty: 1, missed: 1 })
+    expect(migrated.prepare(`SELECT count(*) c FROM check_ins
+      WHERE date IN ('2026-09-08','2026-09-16','2026-09-21','2026-09-22')`).get()).toEqual({ c: 0 })
+    expect(migrated.prepare("SELECT count(*) c FROM check_ins WHERE status='missed' AND at IS NOT NULL").get()).toEqual({ c: 0 })
+
+    closeDb()
+    expect((getDb().prepare("SELECT count(*) c FROM check_ins WHERE patient_id='p-001'").get() as any).c).toBe(126)
+  })
+
+  it('患者列表今日完成数不统计已经失效的任务', () => {
+    const db = getDb()
+    db.prepare(`INSERT INTO task_defs
+      (id,patient_id,kind,title,scheduled_time,instruction,cautions,origin,active_from,active_to)
+      VALUES ('task-expired','p-001','record','旧计划','06:00','演示','[]','user_provided','2026-09-01','2026-09-21')`).run()
+    db.prepare(`INSERT INTO check_ins
+      (id,patient_id,task_id,date,status,at)
+      VALUES ('ci-expired-today','p-001','task-expired','2026-09-22','done','2026-09-22T06:00:00+08:00')`).run()
+
+    const rows = db.prepare(patientListQuery('?')).all(
+      '2026-09-22', '2026-09-22',
+      '2026-09-22', '2026-09-22', '2026-09-22',
+      '2026-09-22', 'u-test', 'p-001',
+    ) as any[]
+    expect(rows[0].today_total).toBe(7)
+    expect(rows[0].today_done).toBe(0)
   })
 
   it('可重入：再次调用不重复应用迁移', () => {

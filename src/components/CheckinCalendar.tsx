@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import {toISODate} from '../data/seed'
 import { usePatientData } from '../data/context'
+import { tasksForDate } from '../data/taskSchedule'
 import { effectiveStatus, useDemoState } from '../store/store'
 import { IconCheck, IconChevron } from './Icons'
 
@@ -11,7 +12,7 @@ type State = 'out' | 'future' | 'full' | 'partial' | 'none' | 'norecord'
 
 /** 打卡日历 —— 两端共用，保证家属与康复师看到的是同一套判定 */
 export function CheckinCalendar() {
-  const { homecareStart: HOMECARE_START, taskDefs } = usePatientData()
+  const { homecareStart: HOMECARE_START, taskSchedule } = usePatientData()
   const state = useDemoState()
   const today = new Date()
   const todayKey = toISODate(today)
@@ -38,50 +39,53 @@ export function CheckinCalendar() {
     const { y, m } = view
     const lead = new Date(y, m, 1).getDay()
     const days = new Date(y, m + 1, 0).getDate()
-    const total = taskDefs.length
-    const out: { key: string; day: number; state: State; done: number }[] = []
+    const out: { key: string; day: number; state: State; done: number; total: number }[] = []
 
     for (let i = 0; i < lead; i++) {
       const d = new Date(y, m, i - lead + 1)
-      out.push({ key: toISODate(d), day: d.getDate(), state: 'out', done: 0 })
+      out.push({ key: toISODate(d), day: d.getDate(), state: 'out', done: 0, total: 0 })
     }
     for (let day = 1; day <= days; day++) {
       const key = toISODate(new Date(y, m, day))
-      const hits = state.checkIns.filter((c) => c.date === key)
+      const dayTasks = tasksForDate(taskSchedule, key)
+      const taskIds = new Set(dayTasks.map((task) => task.id))
+      const hits = state.checkIns.filter((c) => c.date === key && taskIds.has(c.taskId))
+      const total = dayTasks.length
       const done = hits.filter((c) => c.status === 'done').length
       let st: State
       let d = done
       if (key > todayKey) st = 'future'
-      else if (key < startKey) st = 'norecord'
+      else if (key < startKey || total === 0) st = 'norecord'
       else if (key === todayKey) {
         // 今天必须与今日页同一判定，否则两处会各说各话
-        const eff = taskDefs.map((t) => effectiveStatus(t, hits.find((c) => c.taskId === t.id)))
+        const eff = dayTasks.map((t) => effectiveStatus(t, hits.find((c) => c.taskId === t.id)))
         d = eff.filter((x) => x === 'done').length
         st = d >= total ? 'full' : d === 0 ? 'none' : 'partial'
       } else if (hits.length === 0) st = 'norecord'
       else st = done >= total ? 'full' : done === 0 ? 'none' : 'partial'
-      out.push({ key, day, state: st, done: d })
+      out.push({ key, day, state: st, done: d, total })
     }
     // 补足末行：偏移必须从 1 递增。曾误用 out.length % 7 作偏移，
     // 8 月排到第 37 格时 37 % 7 = 2，于是从次月 2 号补起，1 号被跳过。
     let tail = 1
     while (out.length % 7 !== 0) {
       const d = new Date(y, m, days + tail)
-      out.push({ key: toISODate(d), day: d.getDate(), state: 'out', done: 0 })
+      out.push({ key: toISODate(d), day: d.getDate(), state: 'out', done: 0, total: 0 })
       tail++
     }
     const t = out.filter((c) => ['full', 'partial', 'none'].includes(c.state))
     return { cells: out, tracked: t.length, allDone: t.filter((c) => c.state === 'full').length }
-  }, [view, state.checkIns, todayKey, startKey])
+  }, [view, state.checkIns, taskSchedule, todayKey, startKey])
 
+  const selectedTasks = selected ? tasksForDate(taskSchedule, selected) : []
   const detail = selected
-    ? taskDefs.map((t) => {
+    ? selectedTasks.map((t) => {
         const hit = state.checkIns.find((c) => c.date === selected && c.taskId === t.id)
-        const status = selected === todayKey ? effectiveStatus(t, hit) : hit?.status ?? 'missed'
+        const status = selected === todayKey ? effectiveStatus(t, hit) : hit?.status ?? 'unrecorded'
         return { task: t, status, hasRecord: !!hit }
       })
     : []
-  const selectedHasRecord = detail.some((d) => d.hasRecord) || selected === todayKey
+  const selectedHasPlan = detail.length > 0
 
   return (
     <div className="stack">
@@ -112,7 +116,7 @@ export function CheckinCalendar() {
         <div className="cal-hd">{WEEK.map((w) => <span key={w}>{w}</span>)}</div>
         <div className="cal">
           {cells.map((c, i) => {
-            const clickable = ['full', 'partial', 'none'].includes(c.state)
+            const clickable = c.total > 0 && c.key <= todayKey && ['full', 'partial', 'none', 'norecord'].includes(c.state)
             return (
               <div
                 className="cell"
@@ -126,7 +130,7 @@ export function CheckinCalendar() {
                 <span className="cell-d num">{c.day}</span>
                 <span className="cell-mark">
                   {c.state === 'full' && <IconCheck size={12} />}
-                  {c.state === 'partial' && <span className="num">缺 {taskDefs.length - c.done}</span>}
+                  {c.state === 'partial' && <span className="num">缺 {c.total - c.done}</span>}
                   {c.state === 'none' && <span>未开始</span>}
                 </span>
               </div>
@@ -143,7 +147,7 @@ export function CheckinCalendar() {
         </div>
       </section>
 
-      {selected && selectedHasRecord && (
+      {selected && selectedHasPlan && (
         <section className="card card-pad">
           <div className="card-hd">
             <h2 className="card-title" style={{ fontSize: 'var(--t-md)' }}>
@@ -162,6 +166,8 @@ export function CheckinCalendar() {
                       ? <span className="chip chip-ok"><IconCheck size={10} /> 已完成</span>
                       : status === 'difficulty'
                         ? <span className="chip chip-wait">已反馈困难</span>
+                        : status === 'unrecorded'
+                          ? <span className="chip">无记录</span>
                         : status === 'missed'
                           ? <span className="chip chip-miss">未开始</span>
                           : <span className="chip">未开始</span>}

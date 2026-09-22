@@ -15,9 +15,10 @@ import { basename } from 'path'
 import type { Assessment, CareEvent, Medication } from '../../src/data/types.ts'
 import { hashPassword } from '../auth/password.ts'
 import {
-  patient, taskDefs, videos, therapist,
+  patient, videos, therapist,
   PLAN_CONFIRMED_ON, HOMECARE_START, buildHistory, buildVitals, buildGameStageHistory,
 } from '../../src/data/seed.ts'
+import { TASK_SCHEDULE } from '../../src/data/feedingPlan.ts'
 import { VIDEO_STEPS } from '../../src/data/videoSteps.ts'
 import { CARE_ALERTS, GUIDANCE } from '../../src/data/guidance.ts'
 import { PRESET_QA } from '../../src/data/qa.ts'
@@ -190,11 +191,12 @@ const seed = db.transaction(() => {
   /* ---------- 计划 ---------- */
   const insTask = db.prepare(`INSERT INTO task_defs
     (id,patient_id,kind,title,scheduled_time,instruction,cautions,video_id,reps,duration_min,
-     requires_video_upload,origin,confirmed_on,active_from,active_to) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,NULL)`)
-  for (const t of taskDefs) {
+     requires_video_upload,origin,confirmed_on,active_from,active_to) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
+  for (const t of TASK_SCHEDULE) {
     insTask.run(t.id, p.id, t.kind, t.title, t.scheduledTime, t.instruction, J(t.cautions),
       t.videoId ?? null, t.reps ?? null, t.durationMin ?? null,
-      t.requiresVideoUpload ? 1 : 0, t.origin, PLAN_CONFIRMED_ON, HOMECARE_START)
+      t.requiresVideoUpload ? 1 : 0, t.origin, PLAN_CONFIRMED_ON,
+      t.activeFrom ?? HOMECARE_START, t.activeTo ?? null)
   }
 
   const insRem = db.prepare(`INSERT INTO reminders

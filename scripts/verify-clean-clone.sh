@@ -51,9 +51,9 @@ echo "OK"
 
 if [[ $SKIP_VIDEOS -eq 0 ]]; then
   echo "==> 视频素材（ADR 0013：必须进仓）"
-  n=$(ls public/videos/*.mp4 2>/dev/null | wc -l | tr -d ' ')
-  [[ "$n" == "17" ]] || { echo "视频数为 $n，应为 17"; exit 1; }
-  echo "OK（17 个）"
+  n=$(find public/videos -maxdepth 1 -name 'v-*.mp4' | wc -l | tr -d ' ')
+  [[ "$n" == "21" ]] || { echo "视频库素材数为 $n，应为 21"; exit 1; }
+  echo "OK（视频库 21 个）"
 fi
 
 echo "==> 安装依赖"; pnpm install --frozen-lockfile --silent

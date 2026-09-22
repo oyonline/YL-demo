@@ -14,7 +14,7 @@ import { requireAuth, requireRole, requirePatientAccess, visiblePatientIds } fro
 import { publish, addClient } from '../events/bus.ts'
 import { toCheckIn, toVital, toGameStage, toUpload, toMessage, toGuidance, toEscalation,
          toPatient, toTaskDef, toReminder } from './mappers.ts'
-import { buildGameStageHistory, buildHistory, buildVitals, isBpAbnormal } from '../../src/data/seed.ts'
+import { buildGameStageHistory, buildHistoryForPatient, buildVitals, isBpAbnormal } from '../../src/data/seed.ts'
 
 export const patientsRouter = Router()
 
@@ -38,6 +38,29 @@ function beijingNow(t = new Date()) {
 const one = (v: string | string[] | undefined): string =>
   Array.isArray(v) ? (v[0] ?? '') : (v ?? '')
 
+/** 患者列表查询；完成数与总数必须使用同一份计划生效区间。 */
+export const patientListQuery = (placeholders: string) => `
+  SELECT p.id, p.name, p.gender, p.age_band, d.stage, m.access,
+    (SELECT count(*) FROM task_defs t
+      WHERE t.patient_id = p.id
+        AND t.active_from <= ?
+        AND (t.active_to IS NULL OR t.active_to >= ?))                        AS today_total,
+    (SELECT count(*) FROM check_ins c
+      JOIN task_defs t ON t.id = c.task_id AND t.patient_id = c.patient_id
+      WHERE c.patient_id = p.id AND c.date = ? AND c.status = 'done'
+        AND t.active_from <= ?
+        AND (t.active_to IS NULL OR t.active_to >= ?))                        AS today_done,
+    (SELECT count(*) FROM escalations e
+      WHERE e.patient_id = p.id AND e.status = 'pending')                     AS pending_count,
+    (SELECT count(*) FROM uploads u
+      WHERE u.patient_id = p.id AND u.date = ?)                               AS uploads_today
+  FROM patients p
+  LEFT JOIN patient_diagnosis d ON d.patient_id = p.id
+  LEFT JOIN patient_members m   ON m.patient_id = p.id AND m.user_id = ?
+  WHERE p.id IN (${placeholders}) AND p.status = 'active'
+  ORDER BY p.created_at
+`
+
 /* ---------------- 读 ---------------- */
 
 /** 当前用户可见的患者列表，带今日完成进度（替代前端写死的 roster） */
@@ -49,22 +72,8 @@ patientsRouter.get('/', requireAuth, (req, res) => {
   const today = beijingNow().date
   const ph = ids.map(() => '?').join(',')
   // 工作台要的逐患者标记一次算齐：拆成前端逐个请求，7 位患者就是 7 轮往返。
-  const rows = db.prepare(`
-    SELECT p.id, p.name, p.gender, p.age_band, d.stage, m.access,
-      (SELECT count(*) FROM task_defs t
-        WHERE t.patient_id = p.id AND t.active_to IS NULL)                      AS today_total,
-      (SELECT count(*) FROM check_ins c
-        WHERE c.patient_id = p.id AND c.date = ? AND c.status = 'done')         AS today_done,
-      (SELECT count(*) FROM escalations e
-        WHERE e.patient_id = p.id AND e.status = 'pending')                     AS pending_count,
-      (SELECT count(*) FROM uploads u
-        WHERE u.patient_id = p.id AND u.date = ?)                               AS uploads_today
-    FROM patients p
-    LEFT JOIN patient_diagnosis d ON d.patient_id = p.id
-    LEFT JOIN patient_members m   ON m.patient_id = p.id AND m.user_id = ?
-    WHERE p.id IN (${ph}) AND p.status = 'active'
-    ORDER BY p.created_at
-  `).all(today, today, req.user!.sub, ...ids) as any[]
+  const rows = db.prepare(patientListQuery(ph))
+    .all(today, today, today, today, today, today, req.user!.sub, ...ids) as any[]
 
   // 血压超标要按安全范围逐条判，SQL 里写不干净，取出来用同一个判定函数 ——
   // 两端必须用同一套阈值，否则列表标红而详情页说正常。
@@ -176,11 +185,16 @@ patientsRouter.get('/:id/profile', requireAuth, requirePatientAccess(), (req, re
     events: db.prepare('SELECT * FROM care_events WHERE patient_id = ? ORDER BY date').all(id) as any[],
   })
 
-  // active_to IS NULL = 当前生效的那版计划。历史打卡回看仍能对上当时的版本，
-  // 因为 check_ins 存的是 task_id，任务行本身不删。
-  const tasks = (db.prepare(
-    'SELECT * FROM task_defs WHERE patient_id = ? AND active_to IS NULL ORDER BY scheduled_time',
+  // 同时下发今天生效的计划与完整版本链：首页日期选择和打卡日历都必须按
+  // 所选日期取当时生效的任务，不能把 9 月 29 日后的计划套到 1–28 日。
+  const today = beijingNow().date
+  const taskSchedule = (db.prepare(
+    'SELECT * FROM task_defs WHERE patient_id = ? ORDER BY active_from, scheduled_time, id',
   ).all(id) as any[]).map(toTaskDef)
+  const tasks = taskSchedule.filter((task) => (
+    (!task.activeFrom || task.activeFrom <= today) &&
+    (!task.activeTo || task.activeTo >= today)
+  ))
 
   const th = db.prepare(
     'SELECT id, display_name, title FROM users WHERE id = ?',
@@ -196,6 +210,7 @@ patientsRouter.get('/:id/profile', requireAuth, requirePatientAccess(), (req, re
     // 不放进 Patient 里 —— types.ts 是双端冻结契约，这里作为兄弟字段下发即可。
     careAlerts: (() => { try { return JSON.parse(func?.care_alerts ?? '[]') } catch { return [] } })(),
     tasks,
+    taskSchedule,
     therapist: th ? { id: th.id, name: th.display_name, title: th.title ?? '' } : null,
     reminders: (db.prepare(
       'SELECT * FROM reminders WHERE patient_id = ? AND enabled = 1 ORDER BY time',
@@ -205,9 +220,17 @@ patientsRouter.get('/:id/profile', requireAuth, requirePatientAccess(), (req, re
     // 此前抽屉标着「建档」却取首次打卡日期，两者对林奶奶恰好都是 7-07，
     // 新建患者没有打卡就露馅（显示成别人的日期或半截空文字）。
     createdOn: (p.created_at ?? '').slice(0, 10) || null,
-    homecareStart: (db.prepare(
-      'SELECT min(date) d FROM check_ins WHERE patient_id = ?',
-    ).get(id) as any)?.d ?? null,
+    homecareStart: (() => {
+      const firstCheckIn = (db.prepare(
+        'SELECT min(date) d FROM check_ins WHERE patient_id = ?',
+      ).get(id) as any)?.d
+      const firstPlan = (db.prepare(
+        'SELECT min(active_from) d FROM task_defs WHERE patient_id = ?',
+      ).get(id) as any)?.d
+      return [firstCheckIn, firstPlan, (p.created_at ?? '').slice(0, 10)]
+        .filter((date): date is string => typeof date === 'string' && date.length > 0)
+        .sort()[0] ?? null
+    })(),
   })
 })
 
@@ -477,7 +500,7 @@ patientsRouter.post('/:id/reset', requireAuth, requirePatientAccess(), (req, res
       db.prepare(`DELETE FROM ${t} WHERE patient_id = ?`).run(patientId)
     }
     const ci = db.prepare(`INSERT INTO check_ins (id,patient_id,task_id,date,status,note,at) VALUES (?,?,?,?,?,?,?)`)
-    for (const c of buildHistory(today)) {
+    for (const c of buildHistoryForPatient(today, patientId)) {
       ci.run(c.id, patientId, c.taskId, c.date, c.status, c.note ?? null, c.at ?? null)
     }
     const v = db.prepare(`INSERT INTO vitals (id,patient_id,date,time,systolic,diastolic,by,at) VALUES (?,?,?,?,?,?,?,?)`)

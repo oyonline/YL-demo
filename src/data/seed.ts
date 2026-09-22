@@ -10,7 +10,7 @@
  * - 标注 SYNTHETIC 的字段是甲方未提供、为叙事完整而虚构的，勿当作甲方数据引用。
  */
 
-import type { Patient, TaskDef, VideoAsset, Therapist, CheckIn, GameStageRecord, ISODate, RosterEntry, VitalRecord } from './types'
+import type { Patient, TaskDef, VideoAsset, Therapist, CheckIn, CheckInStatus, GameStageRecord, ISODate, RosterEntry, VitalRecord } from './types'
 
 export const PATIENT_ID = 'p-001'
 
@@ -252,15 +252,22 @@ export const roster: RosterEntry[] = [
 ]
 
 /**
- * 训练视频 —— 甲方 2026-08-28 交付的真实拍摄素材，共 17 个（去重后）。
+ * 训练视频 —— 甲方 2026-08-28 交付 17 个，2026-09-22 用户补充 4 个，共 21 个。
  *
- * 文件不进仓库（约 390MB，见 .gitignore），随压缩包另发，解压到 public/videos/。
+ * 文件随仓放在 public/videos/，保证部署构建和断网演示都能正常播放。
  * 文件名统一为视频 id，避免中文与「！」进 URL 产生编码问题。
  * 文件缺失时播放区自动回退到分步图文，不黑屏 —— 这是「视频另发」方案的兜底。
  *
  * 时长为 ffprobe 实测。target/goal/cautions 只在能追溯到甲方训练计划表时才填，
  * 其余留空：甲方要求「每个视频配一句话说明」但未交付，本项目不替其编造康复指导。
  */
+export const FEATURED_VIDEO_IDS = [
+  'v-swallow-training',
+  'v-limb-rehab-exercise',
+  'v-fruit-meal',
+  'v-tube-feeding',
+] as const
+
 export const videos: VideoAsset[] = [
   {
     id: 'v-swallow',
@@ -309,6 +316,42 @@ export const videos: VideoAsset[] = [
   { id: 'v-head-massage', title: '头部按摩',       category: '基础照护类', src: '/videos/v-head-massage.mp4', durationSec: 307, origin: 'team_reviewed' },
   { id: 'v-acupoint',     title: '穴位按摩',       category: '基础照护类', src: '/videos/v-acupoint.mp4',     durationSec: 88,  origin: 'team_reviewed' },
   { id: 'v-drum',         title: '音乐律动操',     category: '肢体训练类', src: '/videos/v-drum.mp4',         durationSec: 60,  origin: 'team_reviewed' },
+  {
+    id: 'v-swallow-training',
+    title: '吞咽训练',
+    category: '吞咽康复类',
+    src: '/videos/v-swallow-training.mp4',
+    poster: '/posters/v-swallow-training.jpg',
+    durationSec: 15,
+    origin: 'team_reviewed',
+  },
+  {
+    id: 'v-limb-rehab-exercise',
+    title: '肢体康复训练操',
+    category: '肢体训练类',
+    src: '/videos/v-limb-rehab-exercise.mp4',
+    poster: '/posters/v-limb-rehab-exercise.jpg',
+    durationSec: 50,
+    origin: 'team_reviewed',
+  },
+  {
+    id: 'v-fruit-meal',
+    title: '水果餐制作',
+    category: '基础照护类',
+    src: '/videos/v-fruit-meal.mp4',
+    poster: '/posters/v-fruit-meal.jpg',
+    durationSec: 31,
+    origin: 'team_reviewed',
+  },
+  {
+    id: 'v-tube-feeding',
+    title: '鼻饲管进食',
+    category: '基础照护类',
+    src: '/videos/v-tube-feeding.mp4',
+    poster: '/posters/v-tube-feeding.jpg',
+    durationSec: 38,
+    origin: 'team_reviewed',
+  },
 ]
 
 /** 视频库分组顺序 —— 与甲方交付的文件夹结构一致 */
@@ -321,6 +364,9 @@ export const VIDEO_CATEGORIES = ['吞咽康复类', '肢体训练类', '智能�
 /** 居家康复建档日（首次入户评估日）—— 打卡历史与日历可翻阅范围的起点 */
 export const HOMECARE_START: ISODate = '2026-09-12'
 
+/** 本轮演示计划从 9 月 1 日开始，历史记录也从这一天铺设。 */
+export const SIMULATED_HISTORY_START: ISODate = '2026-09-01'
+
 export function toISODate(d: Date): ISODate {
   const y = d.getFullYear()
   const m = String(d.getMonth() + 1).padStart(2, '0')
@@ -328,19 +374,64 @@ export function toISODate(d: Date): ISODate {
   return `${y}-${m}-${day}`
 }
 
+const FEEDING_HISTORY_TASKS = [
+  ['task-feed-meal-1', '07:00'],
+  ['task-feed-medication', '07:30'],
+  ['task-feed-meal-2', '11:00'],
+  ['task-feed-snack-1', '13:00'],
+  ['task-feed-meal-3', '15:00'],
+  ['task-feed-snack-2', '17:00'],
+  ['task-feed-meal-4', '19:00'],
+] as const
+
 /**
- * 生成从居家康复建档日到昨天的打卡历史。
- *
- * 必须覆盖到建档日，不能只回溯固定天数：否则日历往前翻会出现一段"既非无记录、
- * 也非未完成"的空档，与今日页的判定对不上（08-27 实测踩到）。
- *
- * 用固定模式而非随机数，保证每次演示看到的日历完全一致，可反复排练。
- * 模式按距今天数取模：每 7 天缺 1 项，每 11 天缺 2 项，其余全完成。
+ * 固定历史模式：7 表示全部完成，1–6 表示部分完成，0 表示全部未完成，
+ * null 则整天不写记录。用固定日期和固定模式，保证每次演示结果一致。
  */
-export function buildHistory(today: Date, fromISO: ISODate = HOMECARE_START): CheckIn[] {
-  void today
-  void fromISO
-  return []
+const SEPTEMBER_HISTORY_PATTERN: ReadonlyArray<readonly [ISODate, number | null]> = [
+  ['2026-09-01', 7], ['2026-09-02', 7], ['2026-09-03', 5], ['2026-09-04', 0],
+  ['2026-09-05', 7], ['2026-09-06', 7], ['2026-09-07', 4], ['2026-09-08', null],
+  ['2026-09-09', 7], ['2026-09-10', 7], ['2026-09-11', 3], ['2026-09-12', 0],
+  ['2026-09-13', 7], ['2026-09-14', 7], ['2026-09-15', 5], ['2026-09-16', null],
+  ['2026-09-17', 7], ['2026-09-18', 7], ['2026-09-19', 4], ['2026-09-20', 0],
+  ['2026-09-21', null],
+]
+
+/** 为打卡日历生成 9 月固定演示历史；今天和未来日期永远不预填。 */
+export function buildHistory(today: Date, fromISO: ISODate = SIMULATED_HISTORY_START): CheckIn[] {
+  const todayISO = toISODate(today)
+  return SEPTEMBER_HISTORY_PATTERN
+    .filter(([date, doneCount]) => doneCount !== null && date >= fromISO && date < todayISO)
+    .flatMap(([date, doneCount]) => FEEDING_HISTORY_TASKS.map(([taskId, time], index) => {
+      const status: CheckInStatus = doneCount === 7
+        ? 'done'
+        : doneCount === 0
+          ? 'missed'
+          : index < doneCount!
+            ? 'done'
+            : index === doneCount
+              ? 'difficulty'
+              : 'missed'
+      const recorded = status === 'done' || status === 'difficulty'
+      return {
+        id: `ci-demo-${date}-${taskId}`,
+        patientId: PATIENT_ID,
+        taskId,
+        date,
+        status,
+        at: recorded ? new Date(`${date}T${time}:00+08:00`).toISOString() : undefined,
+        note: status === 'difficulty' ? '演示记录：执行时遇到困难。' : undefined,
+      }
+    }))
+}
+
+/** 这批固定历史只属于王萍演示病例，其他患者重置时不得跨患者复用任务。 */
+export function buildHistoryForPatient(
+  today: Date,
+  patientId: string,
+  fromISO: ISODate = SIMULATED_HISTORY_START,
+): CheckIn[] {
+  return patientId === PATIENT_ID ? buildHistory(today, fromISO) : []
 }
 
 /* ---------- 血压：安全范围与演示基线 ---------- */

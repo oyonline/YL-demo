@@ -71,16 +71,15 @@ export function useContent(): ContentValue {
 interface PatientValue {
   patientId: string
   patient: Patient
+  /** 今天生效的计划。 */
   taskDefs: TaskDef[]
+  /** 包含历史和未来生效区间的完整计划版本链。 */
+  taskSchedule: TaskDef[]
   therapist: Therapist
   careAlerts: string[]
   /** 档案建立日期（patients.created_at），与首次打卡日不是一回事 */
   createdOn: string
-  /**
-   * 首次打卡日期。**尚无打卡时退回建档日期，不得硬编码任何具体日期** ——
-   * 此前写死回退到 '2026-07-07'（林奶奶的日期），导致每个没有打卡记录的
-   * 新患者都显示成她的日期。日历用它算可翻阅的最早月份，给建档日即可。
-   */
+  /** 最早计划、首次打卡与建档日期三者中的最早日期。 */
   homecareStart: string
   reminders: ReminderDef[]
   /** 计划确认日期；未确认时为空串，调用方按"暂无"处理 */
@@ -108,10 +107,11 @@ export function PatientProvider({ patientId, children }: { patientId: string; ch
           patientId,
           patient: json.patient,
           taskDefs: json.tasks,
+          taskSchedule: json.taskSchedule ?? json.tasks,
           therapist: json.therapist,
           careAlerts: json.careAlerts,
           createdOn: json.createdOn ?? '',
-          // 没有打卡就退回建档日；再没有才退今天，绝不写死具体日期
+          // 没有计划和打卡才退回建档日；再没有才退今天，绝不写死具体日期
           homecareStart: json.homecareStart ?? json.createdOn ?? new Date().toISOString().slice(0, 10),
           reminders: json.reminders,
           planConfirmedOn: json.planConfirmedOn ?? '',

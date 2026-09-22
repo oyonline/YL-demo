@@ -21,6 +21,7 @@ export type ISODateTime = string  // ISO 8601
 export type DataOrigin =
   | 'synthetic'            // 合成身份／病例
   | 'therapist_confirmed'  // 基于康复师确认计划
+  | 'user_provided'        // 用户直接提供并确认启用
   | 'team_reviewed'        // 团队审核知识库
   | 'ai_generated'         // AI 生成
   | 'simulated'            // 模拟设备／外部联动
@@ -29,6 +30,7 @@ export type DataOrigin =
 export const ORIGIN_LABEL: Record<DataOrigin, string> = {
   synthetic: '演示病例｜内容为演示示例，仅供参考',
   therapist_confirmed: '基于康复师确认计划',
+  user_provided: '按用户提供内容录入',
   team_reviewed: '团队审核知识库',
   ai_generated: 'AI 生成摘要',
   simulated: '模拟数据',
@@ -168,6 +170,9 @@ export interface TaskDef {
   /** 是否要求回传训练视频（本轮为模拟上传，v0.2 §4.2） */
   requiresVideoUpload?: boolean
   origin: DataOrigin
+  /** 计划生效区间；activeTo 为空表示持续生效。 */
+  activeFrom?: ISODate
+  activeTo?: ISODate
 }
 
 export interface VideoAsset {

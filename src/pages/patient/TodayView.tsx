@@ -2,14 +2,15 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {SUPPORT_PHONE, toISODate} from '../../data/seed'
 import { usePatientData, useContent } from '../../data/context'
+import { tasksForDate } from '../../data/taskSchedule'
 import { createEscalation, effectiveStatus, markAllGuidanceRead, setCheckIn, todayCheckIns, useDemoState } from '../../store/store'
-import { IconActivity, IconAlert, IconCalendar, IconCheck, IconChevron, IconClock, IconHeart, IconPill, IconPlay, IconShield } from '../../components/Icons'
+import { IconActivity, IconAlert, IconCalendar, IconCheck, IconChevron, IconClock, IconHeart, IconPill, IconPlay, IconShield, IconUtensils } from '../../components/Icons'
 import { Lines } from '../../components/Lines'
 import { HomeEntries } from './HomeEntries'
 import { EXOSKELETON_TASK_ID } from '../../features/exoskeleton/session'
 
 export function TodayView() {
-  const { patient, taskDefs, therapist, homecareStart } = usePatientData()
+  const { patient, taskDefs, taskSchedule, therapist, homecareStart } = usePatientData()
   const { videos } = useContent()
   const nav = useNavigate()
   const state = useDemoState()
@@ -26,14 +27,17 @@ export function TodayView() {
   const isToday = selectedDate === today
   const isFuture = selectedDate > today
   const isPast = selectedDate < today
-  const selectedCheckIns = todayCheckIns(state, taskDefs, selectedDate)
+  const selectedTasks = tasksForDate(taskSchedule, selectedDate)
+  const selectedCheckIns = todayCheckIns(state, selectedTasks, selectedDate)
   const selectedHasRecord = selectedCheckIns.some((r) => r.checkIn)
-  const selectedRows = isPast && !selectedHasRecord
-    ? []
-    : selectedCheckIns.map((r) => ({
-        ...r,
-        status: isToday ? effectiveStatus(r.task, r.checkIn) : isFuture ? 'planned' as const : r.checkIn?.status ?? 'missed',
-      }))
+  const selectedRows = selectedCheckIns.map((r) => ({
+    ...r,
+    status: isToday
+      ? effectiveStatus(r.task, r.checkIn)
+      : isFuture
+        ? 'planned' as const
+        : r.checkIn?.status ?? 'unrecorded' as const,
+  }))
   const todayRows = todayCheckIns(state, taskDefs, today).map((r) => ({ ...r, status: effectiveStatus(r.task, r.checkIn) }))
 
   // 打开今日页即视为看过康复师的留言，康复师端据此显示"家属已读"
@@ -49,7 +53,8 @@ export function TodayView() {
   }, [datePickerOpen])
 
   const total = todayRows.length
-  const hasPlan = total > 0
+  const hasTodayPlan = total > 0
+  const selectedHasPlan = selectedTasks.length > 0
   const done = todayRows.filter((r) => r.status === 'done').length
   const remaining = total - done
   const next = todayRows.find((r) => r.status === 'pending')
@@ -80,14 +85,14 @@ export function TodayView() {
         <div style={{ position: 'relative', zIndex: 1 }}>
           <div className="hero-eyebrow">个性化康复计划与提醒</div>
           <div className="hero-line">
-            {!hasPlan
+            {!hasTodayPlan
               ? '康复计划待制定'
               : remaining === 0
                 ? '今天的项目已经全部完成'
                 : `今天还有 ${remaining} 项待完成`}
           </div>
           <div className="hero-sub">
-            {!hasPlan
+            {!hasTodayPlan
               ? '护理员制定计划后，今日安排会显示在这里'
               : remaining === 0
               ? '坚持得很好，明天继续保持'
@@ -97,10 +102,10 @@ export function TodayView() {
           </div>
         </div>
         <div className="hero-next">
-          <div className="hero-next-k">{hasPlan ? '连续坚持' : '当前状态'}</div>
+          <div className="hero-next-k">{hasTodayPlan ? '连续坚持' : '当前状态'}</div>
           <div className="hero-next-v num">
-            {hasPlan ? streak(state.checkIns, total) : '待制定'}
-            {hasPlan && <span style={{ fontSize: 'var(--t-sm)', fontWeight: 500, marginLeft: 4, opacity: .75 }}>天</span>}
+            {hasTodayPlan ? streak(state.checkIns, total) : '待制定'}
+            {hasTodayPlan && <span style={{ fontSize: 'var(--t-sm)', fontWeight: 500, marginLeft: 4, opacity: .75 }}>天</span>}
           </div>
         </div>
       </section>
@@ -167,12 +172,12 @@ export function TodayView() {
               )}
             </div>
             <h2 className="card-title">
-              {!hasPlan
+              {!selectedHasPlan
                 ? '尚未制定康复计划'
                 : isFuture
                   ? '查看护理员制定的计划'
                   : isPast
-                    ? '查看当日执行记录'
+                    ? selectedHasRecord ? '查看当日执行记录' : '查看当日计划'
                     : '按护理员制定的计划执行'}
             </h2>
           </div>
@@ -181,34 +186,35 @@ export function TodayView() {
               全部训练视频
             </Link>
             <span className="chip chip-brand num">
-              {!hasPlan ? '待制定' : isFuture ? `计划 ${taskDefs.length} 项` : isPast && !selectedHasRecord ? '无记录' : `${selectedDone} / ${taskDefs.length}`}
+              {!selectedHasPlan
+                ? '待制定'
+                : isFuture
+                  ? `计划 ${selectedTasks.length} 项`
+                  : isPast && !selectedHasRecord
+                    ? `无记录 · 计划 ${selectedTasks.length} 项`
+                    : `${selectedDone} / ${selectedTasks.length}`}
             </span>
           </span>
         </div>
 
         <div className="timeline">
-          {!hasPlan && (
+          {!selectedHasPlan && (
             <div className="empty-chat">
               <div className="big">暂无安排</div>
               <div>护理员完成评估并制定计划后，训练和提醒会自动出现在这里。</div>
-            </div>
-          )}
-          {hasPlan && isPast && !selectedHasRecord && (
-            <div className="empty-chat">
-              <div className="big">当日暂无打卡记录</div>
-              <div>这一天没有留下任务执行记录，可选择其他日期继续查看。</div>
             </div>
           )}
           {selectedRows.map(({ task, checkIn, status }) => {
             const isDone = status === 'done'
             const isNext = isToday && next?.task.id === task.id
             const video = task.videoId ? videos.find((v) => v.id === task.videoId) : undefined
+            const isMealTask = task.id.startsWith('task-feed-') && task.kind !== 'medication'
             // 主操作按任务性质区分：服药是终态确认，训练要先看示范再打卡
             const main = task.id === EXOSKELETON_TASK_ID
               ? { label: '开始训练', run: () => nav('/patient/exoskeleton') }
               : task.kind === 'medication'
               ? { label: '确认已服药', run: () => setCheckIn(task.id, 'done') }
-              : task.kind === 'record'
+              : task.kind === 'record' && !isMealTask
                 ? { label: '已记录', run: () => setCheckIn(task.id, 'done') }
                 : video
                   ? { label: '开始训练', run: () => nav(`/patient/videos/${video.id}`) }
@@ -223,6 +229,8 @@ export function TodayView() {
                   <span className="tl-ico">
                     {task.kind === 'medication'
                       ? <IconPill size={18} />
+                      : isMealTask
+                        ? <IconUtensils size={18} />
                       : task.kind === 'record'
                         ? <IconHeart size={18} />
                         : <IconActivity size={18} />}
@@ -252,6 +260,7 @@ export function TodayView() {
                     {isDone && <span className="chip chip-ok"><IconCheck size={10} /> 已完成</span>}
                     {status === 'difficulty' && <span className="chip chip-wait"><IconAlert size={11} /> 已反馈困难</span>}
                     {status === 'missed' && <span className="chip chip-miss">未完成</span>}
+                    {status === 'unrecorded' && <span className="chip">无记录</span>}
                     {status === 'pending' && (isNext
                       ? <span className="chip chip-wait"><IconClock size={11} /> 即将开始</span>
                       : <span className="chip">未开始</span>)}

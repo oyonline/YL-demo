@@ -87,6 +87,8 @@ export const toTaskDef = (r: any) => ({
   durationMin: r.duration_min ?? undefined,
   requiresVideoUpload: r.requires_video_upload === 1 || undefined,
   origin: r.origin,
+  activeFrom: r.active_from ?? undefined,
+  activeTo: r.active_to ?? undefined,
 })
 
 export const toVideo = (r: any) => ({
