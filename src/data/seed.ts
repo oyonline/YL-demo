@@ -108,7 +108,7 @@ export const patient: Patient = {
     nextReviewDate: '2026-10-27',
   },
 
-  psychosocial: '情绪波动：烦躁、恐惧、拒绝接触',
+  psychosocial: '情绪波动：烦躁、恐惧、拒绝接触鼻饲',
   careEvents: [
     { date: '2026-09-12', kind: 'assessment', title: '照护评估', detail: '完成 MMT、MNA-SF 与洼田饮水试验评估。' },
     { date: '2026-09-12', kind: 'homecare', title: '准备期照护计划制定', detail: '根据王萍档案制定准备期第一周照护与训练计划。' },
