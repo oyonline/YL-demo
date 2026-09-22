@@ -64,8 +64,8 @@ export const EXOSKELETON_ACTIONS: readonly ExoskeletonAction[] = [
     direction: '⌁',
     instruction: '双手轻拍双肩，舒缓肩颈肌肉。',
     encouragement: '再坚持一会，马上就要结束了！',
-    animatedSrc: '/exoskeleton/arm-open-v1.png',
-    stillSrc: '/exoskeleton/arm-open-poster-v1.jpg',
+    videoSrc: '/videos/shoulder-tap-cartoon-v1.mp4',
+    stillSrc: '/exoskeleton/shoulder-tap-cartoon-poster-v1.jpg',
   },
   {
     id: 'reach-march',

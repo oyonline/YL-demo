@@ -324,8 +324,8 @@ export function ExoskeletonView() {
             const isFocusedAction = isPreviewAction || current || celebrating || done
             const motionFailed = failedMotionIds.has(item.id)
             const showMotion = isFocusedAction && motionPlaying && !prefersReducedMotion && !motionFailed
-            const imageClassName = item.id === 'march-warmup'
-              ? 'exo-step-image'
+            const imageClassName = item.videoSrc
+              ? 'exo-step-image is-portrait-demo'
               : 'exo-step-image is-scale-matched'
             const status = done
               ? (celebrating ? '刚刚完成' : '已完成')

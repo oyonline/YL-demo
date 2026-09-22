@@ -36,9 +36,13 @@ describe('外骨骼动作素材', () => {
     }
   })
 
-  it('第一阶段使用动画视频，其余五阶段保留动态图', () => {
+  it('第一和第五阶段使用动画视频，其余四阶段保留动态图', () => {
     expect(EXOSKELETON_ACTIONS[0].videoSrc).toBe('/videos/march-cartoon-refined-v1.mp4')
-    expect(EXOSKELETON_ACTIONS.slice(1).every((action) => action.animatedSrc && !action.videoSrc)).toBe(true)
+    expect(EXOSKELETON_ACTIONS[4].title).toBe('上肢拍肩')
+    expect(EXOSKELETON_ACTIONS[4].videoSrc).toBe('/videos/shoulder-tap-cartoon-v1.mp4')
+    expect(EXOSKELETON_ACTIONS[1].animatedSrc).toBe('/exoskeleton/side-step-v9.png')
+    expect(EXOSKELETON_ACTIONS.filter((_, index) => index !== 0 && index !== 4)
+      .every((action) => action.animatedSrc && !action.videoSrc)).toBe(true)
   })
 
   it('计划与提醒都已更新为六阶段动态图口径', () => {
