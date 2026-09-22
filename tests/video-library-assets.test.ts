@@ -2,29 +2,45 @@ import { readFileSync, statSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { FEATURED_VIDEO_IDS, videos } from '../src/data/seed.ts'
+import { CATEGORY_LEAD_VIDEO_IDS, VIDEO_CATEGORIES, videos } from '../src/data/seed.ts'
 
 const projectRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
 
 describe('康复训练视频库新增素材', () => {
-  it('四条新增视频按确认顺序置顶，且总数为 21 条', () => {
+  it('分类代表视频归入对应分类，并按确认顺序优先展示', () => {
     expect(videos).toHaveLength(21)
-    expect(FEATURED_VIDEO_IDS).toEqual([
-      'v-swallow-training',
-      'v-limb-rehab-exercise',
+    expect(VIDEO_CATEGORIES).toEqual([
+      '基础照护类',
+      '生活照护类',
+      '吞咽康复类',
+      '肢体康复类',
+      '智能辅具类',
+    ])
+    expect(CATEGORY_LEAD_VIDEO_IDS).toEqual([
+      'v-bp',
       'v-fruit-meal',
       'v-tube-feeding',
+      'v-swallow-training',
+      'v-limb-rehab-exercise',
     ])
-    expect(FEATURED_VIDEO_IDS.map((id) => videos.find((video) => video.id === id)?.title)).toEqual([
-      '吞咽训练',
-      '肢体康复训练操',
+    expect(CATEGORY_LEAD_VIDEO_IDS.map((id) => videos.find((video) => video.id === id)?.title)).toEqual([
+      '血压测量',
       '水果餐制作',
-      '鼻饲管进食',
+      '鼻饲进食',
+      '吞咽训练操',
+      '肢体康复训练操',
+    ])
+    expect(CATEGORY_LEAD_VIDEO_IDS.map((id) => videos.find((video) => video.id === id)?.category)).toEqual([
+      '基础照护类',
+      '生活照护类',
+      '生活照护类',
+      '吞咽康复类',
+      '肢体康复类',
     ])
   })
 
   it('视频和缩略图均已进仓，MP4 使用 H.264 浏览器兼容编码', () => {
-    for (const id of FEATURED_VIDEO_IDS) {
+    for (const id of CATEGORY_LEAD_VIDEO_IDS.filter((id) => id !== 'v-bp')) {
       const video = videos.find((candidate) => candidate.id === id)
       expect(video?.src).toBe(`/videos/${id}.mp4`)
       expect(video?.poster).toBe(`/posters/${id}.jpg`)

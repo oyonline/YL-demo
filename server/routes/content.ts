@@ -14,6 +14,12 @@ contentRouter.get('/', requireAuth, (_req, res) => {
   const db = getDb()
 
   const videos = (db.prepare('SELECT * FROM videos ORDER BY sort_order').all() as any[]).map(toVideo)
+  const categoryOrder = ['基础照护类', '生活照护类', '吞咽康复类', '肢体康复类', '智能辅具类']
+  const categories = [...new Set(videos.map((video) => video.category))]
+  const videoCategories = [
+    ...categoryOrder.filter((category) => categories.includes(category)),
+    ...categories.filter((category) => !categoryOrder.includes(category)),
+  ]
 
   // 分步说明按视频归组，形状对齐前端原来的 VIDEO_STEPS: Record<id, Step[]>
   const steps: Record<string, { title: string; detail: string }[]> = {}
@@ -34,8 +40,6 @@ contentRouter.get('/', requireAuth, (_req, res) => {
     presetQA: (db.prepare(
       `SELECT * FROM preset_qa WHERE review_status='approved' ORDER BY sort_order`,
     ).all() as any[]).map(toPresetQA),
-    videoCategories: (db.prepare(
-      'SELECT DISTINCT category FROM videos ORDER BY sort_order',
-    ).all() as any[]).map((r) => r.category),
+    videoCategories,
   })
 })

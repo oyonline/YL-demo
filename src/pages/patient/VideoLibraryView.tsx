@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { usePatientData, useContent } from '../../data/context'
 import { IconPlay } from '../../components/Icons'
-import { FEATURED_VIDEO_IDS } from '../../data/seed'
+import { CATEGORY_LEAD_VIDEO_IDS } from '../../data/seed'
 import type { VideoAsset } from '../../data/types'
 
 /**
@@ -16,17 +16,17 @@ import type { VideoAsset } from '../../data/types'
  * 注意：**视频换版后须重新抽帧**（命令见 public/posters/README）。
  * 图片缺失或加载失败时退回原深色占位块，不黑屏。
  *
- * 用户补充的 4 个视频固定排在首屏，且不在下方分类中重复；其余视频按
- * 原分类和原顺序展示。某一类没有视频时整块不渲染，不留空标题。
+ * 用户补充的 4 个视频放入各自分类，并在对应分类内优先展示；其余视频
+ * 保持原分类和原顺序。某一类没有视频时整块不渲染，不留空标题。
  */
 export function VideoLibraryView() {
   const { taskDefs } = usePatientData()
   const { videoCategories: VIDEO_CATEGORIES, videos, videoSteps: VIDEO_STEPS } = useContent()
-  const featuredVideos = FEATURED_VIDEO_IDS.flatMap((id) => {
+  const categoryLeadVideos = CATEGORY_LEAD_VIDEO_IDS.flatMap((id) => {
     const video = videos.find((candidate) => candidate.id === id)
     return video ? [video] : []
   })
-  const featuredIds = new Set(featuredVideos.map((video) => video.id))
+  const categoryLeadIds = new Set(categoryLeadVideos.map((video) => video.id))
 
   const renderVideoCard = (video: VideoAsset) => {
     const task = taskDefs.find((candidate) => candidate.videoId === video.id)
@@ -63,15 +63,11 @@ export function VideoLibraryView() {
 
   return (
     <div className="stack">
-      {featuredVideos.length > 0 && (
-        <section aria-label="置顶训练视频">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
-            {featuredVideos.map(renderVideoCard)}
-          </div>
-        </section>
-      )}
       {VIDEO_CATEGORIES.map((cat) => {
-        const group = videos.filter((video) => video.category === cat && !featuredIds.has(video.id))
+        const group = [
+          ...categoryLeadVideos.filter((video) => video.category === cat),
+          ...videos.filter((video) => video.category === cat && !categoryLeadIds.has(video.id)),
+        ]
         if (!group.length) return null
         return (
           <section className="stack" key={cat}>

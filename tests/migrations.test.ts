@@ -34,6 +34,8 @@ describe('数据库迁移', () => {
       '0012_add_training_videos.sql',
       '0013_september_feeding_plan.sql',
       '0014_simulate_september_checkins.sql',
+      '0015_update_wang_ping_psychosocial.sql',
+      '0016_reorganize_video_categories.sql',
     ])
   })
 
@@ -41,10 +43,10 @@ describe('数据库迁移', () => {
     const rows = getDb().prepare(`SELECT id, title, category, duration_sec
       FROM videos ORDER BY sort_order`).all() as any[]
     expect(rows).toEqual([
-      { id: 'v-swallow-training', title: '吞咽训练', category: '吞咽康复类', duration_sec: 15 },
-      { id: 'v-limb-rehab-exercise', title: '肢体康复训练操', category: '肢体训练类', duration_sec: 50 },
-      { id: 'v-fruit-meal', title: '水果餐制作', category: '基础照护类', duration_sec: 31 },
-      { id: 'v-tube-feeding', title: '鼻饲管进食', category: '基础照护类', duration_sec: 38 },
+      { id: 'v-swallow-training', title: '吞咽训练操', category: '吞咽康复类', duration_sec: 15 },
+      { id: 'v-limb-rehab-exercise', title: '肢体康复训练操', category: '肢体康复类', duration_sec: 50 },
+      { id: 'v-fruit-meal', title: '水果餐制作', category: '生活照护类', duration_sec: 31 },
+      { id: 'v-tube-feeding', title: '鼻饲进食', category: '生活照护类', duration_sec: 38 },
     ])
   })
 

@@ -261,11 +261,12 @@ export const roster: RosterEntry[] = [
  * 时长为 ffprobe 实测。target/goal/cautions 只在能追溯到甲方训练计划表时才填，
  * 其余留空：甲方要求「每个视频配一句话说明」但未交付，本项目不替其编造康复指导。
  */
-export const FEATURED_VIDEO_IDS = [
-  'v-swallow-training',
-  'v-limb-rehab-exercise',
+export const CATEGORY_LEAD_VIDEO_IDS = [
+  'v-bp',
   'v-fruit-meal',
   'v-tube-feeding',
+  'v-swallow-training',
+  'v-limb-rehab-exercise',
 ] as const
 
 export const videos: VideoAsset[] = [
@@ -283,7 +284,7 @@ export const videos: VideoAsset[] = [
   {
     id: 'v-balance',
     title: '下肢康复训练（准备期）',
-    category: '肢体训练类',
+    category: '肢体康复类',
     src: '/videos/v-balance.mp4',
     target: '左下肢肌力 3 级、步态失衡的老人',
     goal: '训练左下肢活动与平衡能力',
@@ -294,7 +295,7 @@ export const videos: VideoAsset[] = [
   {
     id: 'v-transfer',
     title: '转移训练',
-    category: '肢体训练类',
+    category: '肢体康复类',
     src: '/videos/v-transfer.mp4',
     target: '偏瘫恢复期居家老人',
     goal: '减少照护者腰部负担，降低跌倒与压疮风险',
@@ -304,21 +305,21 @@ export const videos: VideoAsset[] = [
   },
   { id: 'v-feed-water',   title: '喂水技巧',       category: '吞咽康复类',   src: '/videos/v-feed-water.mp4',   durationSec: 61,  origin: 'team_reviewed' },
   { id: 'v-feed-food',    title: '喂食技巧',       category: '吞咽康复类',   src: '/videos/v-feed-food.mp4',    durationSec: 54,  origin: 'team_reviewed' },
-  { id: 'v-joint',        title: '关节活动',       category: '肢体训练类',   src: '/videos/v-joint.mp4',        durationSec: 69,  origin: 'team_reviewed' },
+  { id: 'v-joint',        title: '关节活动',       category: '肢体康复类',   src: '/videos/v-joint.mp4',        durationSec: 69,  origin: 'team_reviewed' },
   { id: 'v-dress',        title: '穿脱衣物',       category: '基础照护类',   src: '/videos/v-dress.mp4',        durationSec: 109, origin: 'team_reviewed' },
   { id: 'v-posture',      title: '良肢位摆放',     category: '基础照护类',   src: '/videos/v-posture.mp4',      durationSec: 82,  origin: 'team_reviewed' },
-  { id: 'v-bp',           title: '血压监测',       category: '基础照护类',   src: '/videos/v-bp.mp4',           durationSec: 172, origin: 'team_reviewed' },
+  { id: 'v-bp',           title: '血压测量',       category: '基础照护类',   src: '/videos/v-bp.mp4',           durationSec: 172, origin: 'team_reviewed' },
   { id: 'v-walker',       title: '助行器行走',     category: '智能辅具类',   src: '/videos/v-walker.mp4',       durationSec: 171, origin: 'team_reviewed' },
   { id: 'v-bandage',      title: '康复辅具绷带使用', category: '智能辅具类', src: '/videos/v-bandage.mp4',      durationSec: 82,  origin: 'team_reviewed' },
   { id: 'v-vr',           title: 'VR 训练',        category: '智能辅具类',   src: '/videos/v-vr.mp4',           durationSec: 161, origin: 'team_reviewed' },
-  { id: 'v-attention',    title: '注意力训练',     category: '肢体训练类',   src: '/videos/v-attention.mp4',    durationSec: 73,  origin: 'team_reviewed' },
-  { id: 'v-memory',       title: '短时记忆训练',   category: '肢体训练类',   src: '/videos/v-memory.mp4',       durationSec: 93,  origin: 'team_reviewed' },
+  { id: 'v-attention',    title: '注意力训练',     category: '肢体康复类',   src: '/videos/v-attention.mp4',    durationSec: 73,  origin: 'team_reviewed' },
+  { id: 'v-memory',       title: '短时记忆训练',   category: '肢体康复类',   src: '/videos/v-memory.mp4',       durationSec: 93,  origin: 'team_reviewed' },
   { id: 'v-head-massage', title: '头部按摩',       category: '基础照护类', src: '/videos/v-head-massage.mp4', durationSec: 307, origin: 'team_reviewed' },
   { id: 'v-acupoint',     title: '穴位按摩',       category: '基础照护类', src: '/videos/v-acupoint.mp4',     durationSec: 88,  origin: 'team_reviewed' },
-  { id: 'v-drum',         title: '音乐律动操',     category: '肢体训练类', src: '/videos/v-drum.mp4',         durationSec: 60,  origin: 'team_reviewed' },
+  { id: 'v-drum',         title: '音乐律动操',     category: '肢体康复类', src: '/videos/v-drum.mp4',         durationSec: 60,  origin: 'team_reviewed' },
   {
     id: 'v-swallow-training',
-    title: '吞咽训练',
+    title: '吞咽训练操',
     category: '吞咽康复类',
     src: '/videos/v-swallow-training.mp4',
     poster: '/posters/v-swallow-training.jpg',
@@ -328,7 +329,7 @@ export const videos: VideoAsset[] = [
   {
     id: 'v-limb-rehab-exercise',
     title: '肢体康复训练操',
-    category: '肢体训练类',
+    category: '肢体康复类',
     src: '/videos/v-limb-rehab-exercise.mp4',
     poster: '/posters/v-limb-rehab-exercise.jpg',
     durationSec: 50,
@@ -337,7 +338,7 @@ export const videos: VideoAsset[] = [
   {
     id: 'v-fruit-meal',
     title: '水果餐制作',
-    category: '基础照护类',
+    category: '生活照护类',
     src: '/videos/v-fruit-meal.mp4',
     poster: '/posters/v-fruit-meal.jpg',
     durationSec: 31,
@@ -345,8 +346,8 @@ export const videos: VideoAsset[] = [
   },
   {
     id: 'v-tube-feeding',
-    title: '鼻饲管进食',
-    category: '基础照护类',
+    title: '鼻饲进食',
+    category: '生活照护类',
     src: '/videos/v-tube-feeding.mp4',
     poster: '/posters/v-tube-feeding.jpg',
     durationSec: 38,
@@ -354,8 +355,8 @@ export const videos: VideoAsset[] = [
   },
 ]
 
-/** 视频库分组顺序 —— 与甲方交付的文件夹结构一致 */
-export const VIDEO_CATEGORIES = ['吞咽康复类', '肢体训练类', '智能辅具类', '基础照护类'] as const
+/** 视频库分组顺序 —— 按用户确认的照护与康复类型展示。 */
+export const VIDEO_CATEGORIES = ['基础照护类', '生活照护类', '吞咽康复类', '肢体康复类', '智能辅具类'] as const
 
 
 
