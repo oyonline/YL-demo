@@ -48,11 +48,11 @@ export const patient: Patient = {
   functionStatus: {
     affectedSide: '左侧肢体活动不利',
     mobility: '左上肢肌力 MMT 4 级、左下肢 3 级，右侧良好；存在步态失衡，转移与步行全程须有人保护',
-    swallowing: '洼田饮水试验 Ⅲ 级；当前按鼻饲流质饮食照护，鼻饲时抬高床头，结束后保持体位 30～60 分钟',
+    swallowing: '洼田饮水试验 Ⅴ 级；当前按鼻饲流质饮食照护，鼻饲时抬高床头，结束后保持体位 30～60 分钟',
     cognition: '神志清醒，能进行语言沟通',
     risks: [
       '跌倒风险（步态失衡）',
-      '误吸风险（洼田 Ⅲ 级）',
+      '误吸风险（洼田 Ⅴ 级）',
       '鼻饲照护（流质饮食）',
     ],
   },
@@ -69,12 +69,12 @@ export const patient: Patient = {
   assessments: [
     {
       name: '洼田饮水试验',
-      value: 'Ⅲ 级',
+      value: 'Ⅴ 级',
       level: '吞咽障碍',
-      tile: { label: '洼田饮水', value: 'Ⅲ 级', note: '吞咽障碍' },
+      tile: { label: '洼田饮水', value: 'Ⅴ 级', note: '吞咽障碍' },
       date: '2026-09-12',
       assessor: '专业团队',
-      note: '洼田饮水试验Ⅲ级，存在吞咽障碍。',
+      note: '洼田饮水试验Ⅴ级，存在吞咽障碍。',
       visibleToFamily: true,
     },
     {
