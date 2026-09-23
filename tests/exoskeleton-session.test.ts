@@ -1,13 +1,22 @@
 import { describe, expect, it } from 'vitest'
 import {
   EXOSKELETON_ACTIONS,
+  EXOSKELETON_FULL_START,
+  EXOSKELETON_INTRO_END,
+  EXOSKELETON_INTRO_START,
   createExoskeletonSession,
+  exoskeletonActionsForDate,
+  exoskeletonPlanSummaryForDate,
   transitionExoskeletonSession,
   type ExoskeletonSession,
 } from '../src/features/exoskeleton/session.ts'
 
-function dispatch(state: ExoskeletonSession, type: 'START' | 'ACTION_DONE' | 'CONTINUE' | 'STOP') {
-  return transitionExoskeletonSession(state, { type })
+function dispatch(
+  state: ExoskeletonSession,
+  type: 'START' | 'ACTION_DONE' | 'CONTINUE' | 'STOP',
+  actionCount = EXOSKELETON_ACTIONS.length,
+) {
+  return transitionExoskeletonSession(state, { type }, actionCount)
 }
 
 describe('外骨骼六步训练状态机', () => {
@@ -16,6 +25,33 @@ describe('外骨骼六步训练状态机', () => {
       '踏步热身', '左右侧步', '前后侧步', '上肢拍手', '上肢拍肩', '上肢交替拍手肘',
     ])
     expect(EXOSKELETON_ACTIONS.every((action) => action.encouragement.length > 0)).toBe(true)
+  })
+
+  it('11 月 27 日至 30 日使用前三项，12 月 1 日起使用六项', () => {
+    expect(exoskeletonActionsForDate(EXOSKELETON_INTRO_START).map((action) => action.title)).toEqual([
+      '踏步热身', '左右侧步', '前后侧步',
+    ])
+    expect(exoskeletonActionsForDate(EXOSKELETON_INTRO_END)).toHaveLength(3)
+    expect(exoskeletonActionsForDate(EXOSKELETON_FULL_START)).toHaveLength(6)
+    expect(exoskeletonPlanSummaryForDate(EXOSKELETON_INTRO_START)).toContain('共 3 个阶段')
+    expect(exoskeletonPlanSummaryForDate(EXOSKELETON_FULL_START)).toContain('共 6 个阶段')
+  })
+
+  it('三步骤版在第三步完成时庆祝并只打卡一次', () => {
+    const actionCount = exoskeletonActionsForDate(EXOSKELETON_INTRO_START).length
+    let state = dispatch(createExoskeletonSession(false, actionCount), 'START', actionCount).state
+
+    for (let index = 0; index < actionCount; index += 1) {
+      const completed = dispatch(state, 'ACTION_DONE', actionCount)
+      expect(completed.state.completedCount).toBe(index + 1)
+      expect(completed.effect).toBe(index === actionCount - 1 ? 'MARK_TODAY_DONE' : undefined)
+      state = dispatch(completed.state, 'CONTINUE', actionCount).state
+    }
+
+    expect(state.phase).toBe('complete')
+    expect(state.completedCount).toBe(3)
+    expect(state.actionIndex).toBe(2)
+    expect(dispatch(state, 'CONTINUE', actionCount).effect).toBeUndefined()
   })
 
   it('只有第六个动作确认后才产生一次今日打卡', () => {

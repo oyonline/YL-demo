@@ -5,7 +5,7 @@ import { usePatientData } from '../../data/context'
 import { addVital, refreshDemoState, useDemoState } from '../../store/store'
 import { BpChart } from '../../components/BpChart'
 import { IconAlert, IconCheck, IconHeart } from '../../components/Icons'
-import { EXOSKELETON_ACTIONS } from '../../features/exoskeleton/session'
+import { exoskeletonActionsForDate } from '../../features/exoskeleton/session'
 
 /**
  * 健康数据（甲方需求书 3.5）。
@@ -81,6 +81,7 @@ function GameDataPanel() {
   const current = todayRecords.length ? todayRecords : latest
   const completed = current.filter((record) => record.status === 'completed')
   const totalSec = completed.reduce((sum, record) => sum + record.durationSec, 0)
+  const currentActions = exoskeletonActionsForDate(current[0]?.date ?? today)
 
   return (
     <div className="game-data stack">
@@ -88,12 +89,12 @@ function GameDataPanel() {
         <div className="card-hd">
           <div>
             <div className="eyebrow">互动游戏数据</div>
-            <h2 className="card-title">外骨骼六阶段训练</h2>
+            <h2 className="card-title">外骨骼{currentActions.length}阶段训练</h2>
           </div>
           <span className="chip chip-ok">自动记录</span>
         </div>
         <div className="game-metrics">
-          <GameMetric label="完成阶段" value={`${completed.length} / ${EXOSKELETON_ACTIONS.length}`} />
+          <GameMetric label="完成阶段" value={`${completed.length} / ${currentActions.length}`} />
           <GameMetric label="训练总用时" value={formatDuration(totalSec)} />
           <GameMetric label="平均每阶段" value={completed.length ? formatDuration(Math.round(totalSec / completed.length)) : '—'} />
           <GameMetric label="最近训练" value={current[0]?.date ? formatShortDate(current[0].date) : '暂无'} />
@@ -110,7 +111,7 @@ function GameDataPanel() {
           <span className="card-note">{completed.length} 个阶段已完成</span>
         </div>
         <div className="game-stage-list">
-          {EXOSKELETON_ACTIONS.map((action, index) => {
+          {currentActions.map((action, index) => {
             const record = current.find((item) => item.actionId === action.id)
             return (
               <div className="game-stage-row" key={action.id} data-status={record?.status ?? 'pending'}>
@@ -133,11 +134,12 @@ function GameDataPanel() {
           {sessionList.slice(0, 8).map((records) => {
             const done = records.filter((record) => record.status === 'completed')
             const seconds = done.reduce((sum, record) => sum + record.durationSec, 0)
+            const sessionActionCount = exoskeletonActionsForDate(records[0].date).length
             return (
               <div key={records[0].sessionId}>
                 <time>{formatShortDate(records[0].date)}</time>
-                <span><strong>{done.length} / {EXOSKELETON_ACTIONS.length} 阶段</strong><small>训练总用时 {formatDuration(seconds)}</small></span>
-                <i style={{ '--game-progress': `${done.length / EXOSKELETON_ACTIONS.length * 100}%` } as React.CSSProperties} />
+                <span><strong>{done.length} / {sessionActionCount} 阶段</strong><small>训练总用时 {formatDuration(seconds)}</small></span>
+                <i style={{ '--game-progress': `${done.length / sessionActionCount * 100}%` } as React.CSSProperties} />
               </div>
             )
           })}

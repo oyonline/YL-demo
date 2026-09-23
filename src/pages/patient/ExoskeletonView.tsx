@@ -6,10 +6,10 @@ import { usePatientData } from '../../data/context'
 import { toISODate } from '../../data/seed'
 import { tasksForDate } from '../../data/taskSchedule'
 import {
-  EXOSKELETON_ACTIONS,
   EXOSKELETON_CELEBRATION_AUDIO,
   EXOSKELETON_TASK_ID,
   createExoskeletonSession,
+  exoskeletonActionsForDate,
   transitionExoskeletonSession,
   type ExoskeletonEvent,
 } from '../../features/exoskeleton/session'
@@ -26,17 +26,19 @@ export function ExoskeletonView() {
   const today = toISODate(new Date())
   const previewDate = searchParams.get('date') ?? ''
   const isPlanPreview = searchParams.get('mode') === 'preview' && /^\d{4}-\d{2}-\d{2}$/.test(previewDate)
+  const actionDate = isPlanPreview ? previewDate : today
+  const actions = exoskeletonActionsForDate(actionDate)
   const task = (isPlanPreview ? tasksForDate(taskSchedule, previewDate) : taskDefs)
     .find((candidate) => candidate.id === EXOSKELETON_TASK_ID)
   const checkIn = state.checkIns.find((entry) => entry.taskId === task?.id && entry.date === today)
   const alreadyComplete = !isPlanPreview && task ? effectiveStatus(task, checkIn) === 'done' : false
-  const [session, setSession] = useState(() => createExoskeletonSession(alreadyComplete))
+  const [session, setSession] = useState(() => createExoskeletonSession(alreadyComplete, actions.length))
   const [guardianReady, setGuardianReady] = useState(false)
   const prefersReducedMotion = usePrefersReducedMotion()
   const [motionPlaying, setMotionPlaying] = useState(() => !prefersReducedMotion)
   const [failedMotionIds, setFailedMotionIds] = useState<Set<string>>(() => new Set())
   const [syncStatus, setSyncStatus] = useState<SyncStatus>(alreadyComplete ? 'success' : 'idle')
-  const [visibleActionIndex, setVisibleActionIndex] = useState(() => alreadyComplete ? EXOSKELETON_ACTIONS.length - 1 : 0)
+  const [visibleActionIndex, setVisibleActionIndex] = useState(() => alreadyComplete ? actions.length - 1 : 0)
   const submittedRef = useRef(alreadyComplete)
   const mountedRef = useRef(true)
   const actionButtonRefs = useRef<Array<HTMLButtonElement | null>>([])
@@ -46,16 +48,16 @@ export function ExoskeletonView() {
   // 仅在尚未开练时接受外部完成态。训练中的本地流程优先，避免最后一次
   // 打卡的同步回流抢先盖掉最后一项的原地胜利反馈。
   const viewSession = alreadyComplete && session.phase === 'ready'
-    ? createExoskeletonSession(true)
+    ? createExoskeletonSession(true, actions.length)
     : session
-  const finishedAllActions = viewSession.completedCount === EXOSKELETON_ACTIONS.length
+  const finishedAllActions = viewSession.completedCount === actions.length
   const trainingStarted = viewSession.phase !== 'ready'
   const maxAccessibleActionIndex = finishedAllActions
-    ? EXOSKELETON_ACTIONS.length - 1
+    ? actions.length - 1
     : viewSession.actionIndex
   const showingCurrentAction = visibleActionIndex === viewSession.actionIndex
   const celebrationLevel = viewSession.actionIndex + 1
-  const celebrationAction = EXOSKELETON_ACTIONS[viewSession.actionIndex]
+  const celebrationAction = actions[viewSession.actionIndex]
 
   useEffect(() => {
     mountedRef.current = true
@@ -71,10 +73,10 @@ export function ExoskeletonView() {
     const timer = window.setTimeout(() => {
       setMotionPlaying(!prefersReducedMotion)
       setFailedMotionIds(new Set())
-      setSession((current) => transitionExoskeletonSession(current, { type: 'CONTINUE' }).state)
+      setSession((current) => transitionExoskeletonSession(current, { type: 'CONTINUE' }, actions.length).state)
     }, finishedAllActions ? FINAL_CELEBRATION_MS : STANDARD_CELEBRATION_MS)
     return () => window.clearTimeout(timer)
-  }, [finishedAllActions, prefersReducedMotion, viewSession.actionIndex, viewSession.phase])
+  }, [actions.length, finishedAllActions, prefersReducedMotion, viewSession.actionIndex, viewSession.phase])
 
   useEffect(() => {
     if (viewSession.phase !== 'training') return
@@ -115,9 +117,9 @@ export function ExoskeletonView() {
   function send(event: ExoskeletonEvent) {
     if (event.type === 'ACTION_DONE' && viewSession.phase === 'training') {
       celebrationAudioRefs.current.forEach((audio) => audio.pause())
-      const finalStage = viewSession.actionIndex === EXOSKELETON_ACTIONS.length - 1
+      const finalStage = viewSession.actionIndex === actions.length - 1
       const layers = [
-        { src: EXOSKELETON_ACTIONS[viewSession.actionIndex].encouragementAudioSrc, volume: 1 },
+        { src: actions[viewSession.actionIndex].encouragementAudioSrc, volume: 1 },
         { src: EXOSKELETON_CELEBRATION_AUDIO.confetti, volume: 0.22 },
         {
           src: finalStage
@@ -136,7 +138,7 @@ export function ExoskeletonView() {
     if (!isPlanPreview && (event.type === 'ACTION_DONE' || event.type === 'STOP') && viewSession.phase === 'training') {
       const completedAt = new Date()
       const startedAt = actionStartedAtRef.current ?? completedAt
-      const action = EXOSKELETON_ACTIONS[viewSession.actionIndex]
+      const action = actions[viewSession.actionIndex]
       recordGameStage({
         sessionId: gameSessionIdRef.current,
         taskId: EXOSKELETON_TASK_ID,
@@ -153,7 +155,7 @@ export function ExoskeletonView() {
       })
       actionStartedAtRef.current = null
     }
-    const result = transitionExoskeletonSession(viewSession, event)
+    const result = transitionExoskeletonSession(viewSession, event, actions.length)
     setSession(result.state)
     if (!isPlanPreview && result.effect === 'MARK_TODAY_DONE' && !submittedRef.current) {
       if (alreadyComplete) {
@@ -229,7 +231,7 @@ export function ExoskeletonView() {
                 <path d="M3.2 10.2h4.3v10H3.2a1.4 1.4 0 0 1-1.4-1.4v-7.2a1.4 1.4 0 0 1 1.4-1.4Z" />
               </svg>
             </span>
-            <span className="exo-praise-kicker">{finishedAllActions ? '六项挑战全部完成' : `完成第 ${celebrationLevel} 阶段`}</span>
+            <span className="exo-praise-kicker">{finishedAllActions ? `${actions.length} 项挑战全部完成` : `完成第 ${celebrationLevel} 阶段`}</span>
             <strong>{celebrationAction.encouragement}</strong>
             <span>{finishedAllActions ? (isPlanPreview ? '本次动作体验顺利通关' : '今日律动训练顺利通关') : '即将自动进入下一环节'}</span>
           </div>
@@ -245,14 +247,14 @@ export function ExoskeletonView() {
               : '训练包含下肢步态与上肢协同动作；完成安全确认后，跟随下方画面逐项练习并打卡。'}
           </p>
           <div className="exo-meta">
-            <span><b>{EXOSKELETON_ACTIONS.length}</b> 个训练阶段</span>
+            <span><b>{actions.length}</b> 个训练阶段</span>
             {task.durationMin && <span>约 <b>{task.durationMin}</b> 分钟</span>}
             <span>照护人全程陪同</span>
           </div>
         </div>
 
         <div className="exo-overview-score" data-complete={finishedAllActions}>
-          <strong className="num">{viewSession.completedCount}<small> / {EXOSKELETON_ACTIONS.length}</small></strong>
+          <strong className="num">{viewSession.completedCount}<small> / {actions.length}</small></strong>
           <span>{finishedAllActions ? (isPlanPreview ? '本次体验已完成' : '今日训练已完成') : (isPlanPreview ? '动作体验进度' : '动作完成进度')}</span>
         </div>
 
@@ -294,7 +296,7 @@ export function ExoskeletonView() {
           </div>
           <div className="exo-progress-copy" aria-live="polite">
             <span>当前进度</span>
-            <strong className="num">{viewSession.completedCount} / {EXOSKELETON_ACTIONS.length}</strong>
+            <strong className="num">{viewSession.completedCount} / {actions.length}</strong>
           </div>
         </header>
 
@@ -303,10 +305,10 @@ export function ExoskeletonView() {
           role="progressbar"
           aria-label="智能辅具助力行走训练进度"
           aria-valuemin={0}
-          aria-valuemax={EXOSKELETON_ACTIONS.length}
+          aria-valuemax={actions.length}
           aria-valuenow={viewSession.completedCount}
         >
-          {EXOSKELETON_ACTIONS.map((item, index) => (
+          {actions.map((item, index) => (
             <span
               key={item.id}
               className={index < viewSession.completedCount ? 'is-done' : index === viewSession.actionIndex && trainingStarted ? 'is-current' : ''}
@@ -323,8 +325,8 @@ export function ExoskeletonView() {
             <span aria-hidden="true">←</span> 上一阶段
           </button>
           <div className="exo-stage-nav-current" aria-live="polite">
-            <span>第 {visibleActionIndex + 1} / {EXOSKELETON_ACTIONS.length} 阶段</span>
-            <strong>{EXOSKELETON_ACTIONS[visibleActionIndex].title}</strong>
+            <span>第 {visibleActionIndex + 1} / {actions.length} 阶段</span>
+            <strong>{actions[visibleActionIndex].title}</strong>
             {!showingCurrentAction && <small>正在回看已完成阶段</small>}
           </div>
           <button
@@ -348,7 +350,7 @@ export function ExoskeletonView() {
         )}
 
         <div className="exo-action-grid is-single">
-          {[EXOSKELETON_ACTIONS[visibleActionIndex]].map((item) => {
+          {[actions[visibleActionIndex]].map((item) => {
             const index = visibleActionIndex
             const done = finishedAllActions || index < viewSession.completedCount
             const current = viewSession.phase === 'training' && index === viewSession.actionIndex
@@ -467,7 +469,7 @@ export function ExoskeletonView() {
                       <span className="exo-inline-win-mark"><IconCheck size={25} /></span>
                       <div>
                         <strong>{item.encouragement}</strong>
-                        <span className="num">已完成 {viewSession.completedCount} / {EXOSKELETON_ACTIONS.length}</span>
+                        <span className="num">已完成 {viewSession.completedCount} / {actions.length}</span>
                       </div>
                       <span className="exo-win-reward" aria-hidden="true">+1 <small>完成</small></span>
                       {!finishedAllActions && (
@@ -507,7 +509,7 @@ export function ExoskeletonView() {
             <div className="exo-result-mark"><IconCheck size={38} /></div>
             <div>
               <div className="exo-kicker">{isPlanPreview ? '未来计划体验完成' : '今日训练完成'}</div>
-              <h2 id="exo-finish-title">{EXOSKELETON_ACTIONS.length} 个训练阶段全部完成</h2>
+              <h2 id="exo-finish-title">{actions.length} 个训练阶段全部完成</h2>
               <p>
                 {isPlanPreview
                   ? '本次仅用于提前熟悉动作，没有生成未来日期打卡或训练记录。'

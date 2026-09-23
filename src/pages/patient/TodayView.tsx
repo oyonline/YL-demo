@@ -7,7 +7,10 @@ import { createEscalation, effectiveStatus, markAllGuidanceRead, setCheckIn, tod
 import { IconActivity, IconAlert, IconCalendar, IconCheck, IconChevron, IconClock, IconHeart, IconPill, IconPlay, IconShield, IconUtensils } from '../../components/Icons'
 import { Lines } from '../../components/Lines'
 import { HomeEntries } from './HomeEntries'
-import { EXOSKELETON_TASK_ID } from '../../features/exoskeleton/session'
+import {
+  EXOSKELETON_TASK_ID,
+  exoskeletonPlanSummaryForDate,
+} from '../../features/exoskeleton/session'
 
 export function TodayView() {
   const { patient, taskDefs, taskSchedule, therapist, homecareStart } = usePatientData()
@@ -210,6 +213,9 @@ export function TodayView() {
             const video = task.videoId ? videos.find((v) => v.id === task.videoId) : undefined
             const isMealTask = task.id.startsWith('task-feed-') && task.kind !== 'medication'
             const isFutureGame = isFuture && task.id === EXOSKELETON_TASK_ID
+            const taskSummary = task.id === EXOSKELETON_TASK_ID
+              ? exoskeletonPlanSummaryForDate(selectedDate)
+              : task.reps ?? task.instruction
             // 主操作按任务性质区分：服药是终态确认，训练要先看示范再打卡
             const main = task.id === EXOSKELETON_TASK_ID
               ? isFuture
@@ -241,7 +247,7 @@ export function TodayView() {
                   <div>
                     <div className="tl-title">{task.title}</div>
                     <div className="tl-desc">
-                      <span>{task.reps ?? task.instruction}</span>
+                      <span>{taskSummary}</span>
                     </div>
                     {status === 'difficulty' && checkIn?.note && (
                       <div className="tl-desc" style={{ marginTop: 6, color: 'var(--wait)' }}>

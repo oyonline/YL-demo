@@ -1,4 +1,7 @@
 export const EXOSKELETON_TASK_ID = 'task-cognition'
+export const EXOSKELETON_INTRO_START = '2026-11-27'
+export const EXOSKELETON_INTRO_END = '2026-11-30'
+export const EXOSKELETON_FULL_START = '2026-12-01'
 
 export interface ExoskeletonAction {
   id: 'march-warmup' | 'side-step' | 'walking-transition' | 'arm-step' | 'arm-cross' | 'reach-march'
@@ -92,6 +95,20 @@ export const EXOSKELETON_ACTIONS: readonly ExoskeletonAction[] = [
   },
 ] as const
 
+const EXOSKELETON_INTRO_ACTIONS = EXOSKELETON_ACTIONS.slice(0, 3)
+
+export function exoskeletonActionsForDate(date: string): readonly ExoskeletonAction[] {
+  return date >= EXOSKELETON_INTRO_START && date <= EXOSKELETON_INTRO_END
+    ? EXOSKELETON_INTRO_ACTIONS
+    : EXOSKELETON_ACTIONS
+}
+
+export function exoskeletonPlanSummaryForDate(date: string): string {
+  return exoskeletonActionsForDate(date).length === EXOSKELETON_INTRO_ACTIONS.length
+    ? '下肢步态训练（共 3 个阶段）'
+    : '下肢步态训练 + 上肢协同训练（共 6 个阶段）'
+}
+
 export type ExoskeletonPhase = 'ready' | 'training' | 'celebrating' | 'complete' | 'stopped'
 
 export interface ExoskeletonSession {
@@ -113,12 +130,15 @@ export interface ExoskeletonTransition {
   effect?: 'MARK_TODAY_DONE'
 }
 
-export function createExoskeletonSession(alreadyComplete = false): ExoskeletonSession {
+export function createExoskeletonSession(
+  alreadyComplete = false,
+  actionCount = EXOSKELETON_ACTIONS.length,
+): ExoskeletonSession {
   if (alreadyComplete) {
     return {
       phase: 'complete',
-      actionIndex: EXOSKELETON_ACTIONS.length - 1,
-      completedCount: EXOSKELETON_ACTIONS.length,
+      actionIndex: actionCount - 1,
+      completedCount: actionCount,
       checkInIssued: true,
     }
   }
@@ -135,9 +155,10 @@ export function createExoskeletonSession(alreadyComplete = false): ExoskeletonSe
 export function transitionExoskeletonSession(
   current: ExoskeletonSession,
   event: ExoskeletonEvent,
+  actionCount = EXOSKELETON_ACTIONS.length,
 ): ExoskeletonTransition {
   if (event.type === 'SYNC_DONE') {
-    return { state: createExoskeletonSession(true) }
+    return { state: createExoskeletonSession(true, actionCount) }
   }
 
   if (event.type === 'STOP') {
@@ -155,7 +176,7 @@ export function transitionExoskeletonSession(
       return { state: current }
     }
     const completedCount = current.actionIndex + 1
-    const finishedAllActions = completedCount === EXOSKELETON_ACTIONS.length
+    const finishedAllActions = completedCount === actionCount
     return {
       state: {
         ...current,
@@ -170,7 +191,7 @@ export function transitionExoskeletonSession(
   if (event.type === 'CONTINUE') {
     if (current.phase !== 'celebrating') return { state: current }
 
-    if (current.completedCount === EXOSKELETON_ACTIONS.length) {
+    if (current.completedCount === actionCount) {
       return { state: { ...current, phase: 'complete' } }
     }
 

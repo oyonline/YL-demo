@@ -44,7 +44,7 @@ export const DAILY_REMINDERS: ReminderDef[] = [
     id: 'rm-cognition',
     time: '15:30',
     taskId: 'task-cognition',
-    text: '🦿 15:30 智能辅具助力行走时间到了，请先完成设备与环境检查，再跟随动态图完成下肢步态与上肢协同六个训练阶段，全程在旁保护。',
+    text: '🦿 15:30 智能辅具助力行走时间到了，请先完成设备与环境检查，再跟随动态图完成当天安排的训练阶段，全程在旁保护。',
   },
   {
     id: 'rm-skin',

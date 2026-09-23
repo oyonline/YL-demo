@@ -76,7 +76,7 @@ describe('外骨骼动作素材', () => {
     expect(task?.instruction).toContain('六个阶段')
     expect(task?.instruction).toContain('跟随动态图')
     expect(task?.reps).toContain('共 6 个阶段')
-    expect(reminder?.text).toContain('六个训练阶段')
+    expect(reminder?.text).toContain('当天安排的训练阶段')
     expect(`${task?.instruction}${task?.reps}${reminder?.text}`).not.toMatch(/四步|资料未提供/)
   })
 })
