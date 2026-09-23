@@ -9,6 +9,9 @@
   mask-image: var(--exo-edge-mask);
 }
 
-/* 竖版视频两侧会透出容器底色，按素材边缘色消除阶段 4、5 的色块边界。 */
+/* 竖版视频两侧会透出容器底色，按素材边缘色消除色块边界。 */
+.exo-action-grid.is-single .exo-step-media[data-action-id='side-step'] { background: #f6e7db; }
+.exo-action-grid.is-single .exo-step-media[data-action-id='walking-transition'] { background: #eddccc; }
 .exo-action-grid.is-single .exo-step-media[data-action-id='arm-step'] { background: #e4d7c8; }
 .exo-action-grid.is-single .exo-step-media[data-action-id='arm-cross'] { background: #e4d9ce; }
+.exo-action-grid.is-single .exo-step-media[data-action-id='reach-march'] { background: #ebdbcf; }

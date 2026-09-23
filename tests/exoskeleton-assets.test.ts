@@ -4,7 +4,10 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { DAILY_REMINDERS } from '../src/data/reminders.ts'
 import { taskDefs } from '../src/data/seed.ts'
-import { EXOSKELETON_ACTIONS } from '../src/features/exoskeleton/session.ts'
+import {
+  EXOSKELETON_ACTIONS,
+  EXOSKELETON_CELEBRATION_AUDIO,
+} from '../src/features/exoskeleton/session.ts'
 
 const projectRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -14,6 +17,7 @@ describe('外骨骼动作素材', () => {
     expect(new Set(EXOSKELETON_ACTIONS.map((action) => action.id)).size).toBe(6)
     expect(new Set(EXOSKELETON_ACTIONS.map((action) => action.videoSrc ?? action.animatedSrc)).size).toBe(6)
     expect(new Set(EXOSKELETON_ACTIONS.map((action) => action.stillSrc)).size).toBe(6)
+    expect(new Set(EXOSKELETON_ACTIONS.map((action) => action.encouragementAudioSrc)).size).toBe(6)
 
     for (const action of EXOSKELETON_ACTIONS) {
       const motionSrc = action.videoSrc ?? action.animatedSrc
@@ -33,18 +37,36 @@ describe('外骨骼动作素材', () => {
         expect([...header.subarray(0, 8)]).toEqual([137, 80, 78, 71, 13, 10, 26, 10])
       }
       expect([...readFileSync(stillPath).subarray(0, 3)]).toEqual([255, 216, 255])
+
+      expect(action.encouragementAudioSrc).toMatch(/^\/audio\/exoskeleton\/stage-[1-6]-encouragement\.mp3$/)
+      const audioPath = join(projectRoot, 'public', action.encouragementAudioSrc)
+      expect(statSync(audioPath).size).toBeGreaterThan(1_000)
+      expect(readFileSync(audioPath).subarray(0, 3).toString('ascii')).toBe('ID3')
     }
   })
 
-  it('第一、第四和第五阶段使用新动画角色视频', () => {
+  it('六个阶段都使用新动画角色视频', () => {
     expect(EXOSKELETON_ACTIONS[0].videoSrc).toBe('/videos/game-stage-1-march-v2.mp4')
+    expect(EXOSKELETON_ACTIONS[1].title).toBe('左右侧步')
+    expect(EXOSKELETON_ACTIONS[1].videoSrc).toBe('/videos/game-stage-2-side-step-v2.mp4')
+    expect(EXOSKELETON_ACTIONS[2].title).toBe('前后侧步')
+    expect(EXOSKELETON_ACTIONS[2].videoSrc).toBe('/videos/game-stage-3-walking-transition-v2.mp4')
     expect(EXOSKELETON_ACTIONS[3].title).toBe('上肢拍手')
     expect(EXOSKELETON_ACTIONS[3].videoSrc).toBe('/videos/game-stage-4-clap-v2.mp4')
     expect(EXOSKELETON_ACTIONS[4].title).toBe('上肢拍肩')
     expect(EXOSKELETON_ACTIONS[4].videoSrc).toBe('/videos/game-stage-5-shoulder-tap-v2.mp4')
-    expect(EXOSKELETON_ACTIONS[1].animatedSrc).toBe('/exoskeleton/side-step-v9.png')
-    expect(EXOSKELETON_ACTIONS.filter((_, index) => ![0, 3, 4].includes(index))
-      .every((action) => action.animatedSrc && !action.videoSrc)).toBe(true)
+    expect(EXOSKELETON_ACTIONS[5].title).toBe('上肢交替拍手肘')
+    expect(EXOSKELETON_ACTIONS[5].videoSrc).toBe('/videos/game-stage-6-elbow-tap-v2.mp4')
+    expect(EXOSKELETON_ACTIONS.every((action) => action.videoSrc && !action.animatedSrc)).toBe(true)
+  })
+
+  it('完成反馈使用本地鼓励语、礼花音效和庆祝音乐', () => {
+    for (const src of Object.values(EXOSKELETON_CELEBRATION_AUDIO)) {
+      expect(src).toMatch(/^\/audio\/exoskeleton\/[a-z0-9-]+\.mp3$/)
+      const audioPath = join(projectRoot, 'public', src)
+      expect(statSync(audioPath).size).toBeGreaterThan(1_000)
+      expect(readFileSync(audioPath).subarray(0, 3).toString('ascii')).toBe('ID3')
+    }
   })
 
   it('计划与提醒都已更新为六阶段动态图口径', () => {

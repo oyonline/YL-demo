@@ -7,6 +7,7 @@ import { toISODate } from '../../data/seed'
 import { tasksForDate } from '../../data/taskSchedule'
 import {
   EXOSKELETON_ACTIONS,
+  EXOSKELETON_CELEBRATION_AUDIO,
   EXOSKELETON_TASK_ID,
   createExoskeletonSession,
   transitionExoskeletonSession,
@@ -15,8 +16,8 @@ import {
 import { effectiveStatus, recordGameStage, setCheckInWithServerAck, useDemoState } from '../../store/store'
 
 type SyncStatus = 'idle' | 'pending' | 'success' | 'failed'
-const STANDARD_CELEBRATION_MS = 2600
-const FINAL_CELEBRATION_MS = 3000
+const STANDARD_CELEBRATION_MS = 5000
+const FINAL_CELEBRATION_MS = 5600
 
 export function ExoskeletonView() {
   const { patient, taskDefs, taskSchedule } = usePatientData()
@@ -41,6 +42,7 @@ export function ExoskeletonView() {
   const actionButtonRefs = useRef<Array<HTMLButtonElement | null>>([])
   const actionStartedAtRef = useRef<Date | null>(null)
   const gameSessionIdRef = useRef(`game-${today}-${EXOSKELETON_TASK_ID}`)
+  const celebrationAudioRefs = useRef<HTMLAudioElement[]>([])
   // 仅在尚未开练时接受外部完成态。训练中的本地流程优先，避免最后一次
   // 打卡的同步回流抢先盖掉最后一项的原地胜利反馈。
   const viewSession = alreadyComplete && session.phase === 'ready'
@@ -58,7 +60,10 @@ export function ExoskeletonView() {
   useEffect(() => {
     mountedRef.current = true
     window.scrollTo(0, 0)
-    return () => { mountedRef.current = false }
+    return () => {
+      mountedRef.current = false
+      celebrationAudioRefs.current.forEach((audio) => audio.pause())
+    }
   }, [])
 
   useEffect(() => {
@@ -108,6 +113,26 @@ export function ExoskeletonView() {
   }
 
   function send(event: ExoskeletonEvent) {
+    if (event.type === 'ACTION_DONE' && viewSession.phase === 'training') {
+      celebrationAudioRefs.current.forEach((audio) => audio.pause())
+      const finalStage = viewSession.actionIndex === EXOSKELETON_ACTIONS.length - 1
+      const layers = [
+        { src: EXOSKELETON_ACTIONS[viewSession.actionIndex].encouragementAudioSrc, volume: 1 },
+        { src: EXOSKELETON_CELEBRATION_AUDIO.confetti, volume: 0.22 },
+        {
+          src: finalStage
+            ? EXOSKELETON_CELEBRATION_AUDIO.finalMusic
+            : EXOSKELETON_CELEBRATION_AUDIO.standardMusic,
+          volume: finalStage ? 0.18 : 0.14,
+        },
+      ]
+      celebrationAudioRefs.current = layers.map(({ src, volume }) => {
+        const audio = new Audio(src)
+        audio.volume = volume
+        void audio.play().catch(() => undefined)
+        return audio
+      })
+    }
     if (!isPlanPreview && (event.type === 'ACTION_DONE' || event.type === 'STOP') && viewSession.phase === 'training') {
       const completedAt = new Date()
       const startedAt = actionStartedAtRef.current ?? completedAt
