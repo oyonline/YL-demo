@@ -359,7 +359,7 @@ export function ExoskeletonView() {
                   )}
                 </header>
 
-                <div className="exo-step-media">
+                <div className="exo-step-media" data-action-id={item.id}>
                   {showMotion && item.animatedSrc ? (
                     <img
                       key={`${item.id}-game-motion`}
