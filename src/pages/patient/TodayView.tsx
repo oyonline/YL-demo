@@ -209,9 +209,12 @@ export function TodayView() {
             const isNext = isToday && next?.task.id === task.id
             const video = task.videoId ? videos.find((v) => v.id === task.videoId) : undefined
             const isMealTask = task.id.startsWith('task-feed-') && task.kind !== 'medication'
+            const isFutureGame = isFuture && task.id === EXOSKELETON_TASK_ID
             // 主操作按任务性质区分：服药是终态确认，训练要先看示范再打卡
             const main = task.id === EXOSKELETON_TASK_ID
-              ? { label: '开始训练', run: () => nav('/patient/exoskeleton') }
+              ? isFuture
+                ? { label: '进入游戏', run: () => nav(`/patient/exoskeleton?mode=preview&date=${selectedDate}`) }
+                : { label: '开始训练', run: () => nav('/patient/exoskeleton') }
               : task.kind === 'medication'
               ? { label: '确认已服药', run: () => setCheckIn(task.id, 'done') }
               : task.kind === 'record' && !isMealTask
@@ -269,7 +272,9 @@ export function TodayView() {
 
                   <div className="tl-actions">
                     {!isToday ? (
-                      <span className="card-note">仅查看</span>
+                      isFutureGame
+                        ? <button className="btn" onClick={main.run}>{main.label}</button>
+                        : <span className="card-note">仅查看</span>
                     ) : isDone ? (
                       <button className="btn-quiet" onClick={() => setCheckIn(task.id, 'pending')}>撤销</button>
                     ) : (

@@ -24,8 +24,8 @@ export const EXOSKELETON_ACTIONS: readonly ExoskeletonAction[] = [
     direction: '↑',
     instruction: '跟随角色交替抬腿踏步，配合节奏热身。',
     encouragement: '真棒！热身做得很到位，继续加油！',
-    videoSrc: '/videos/march-cartoon-refined-v1.mp4',
-    stillSrc: '/exoskeleton/march-cartoon-refined-poster-v1.jpg',
+    videoSrc: '/videos/game-stage-1-march-v2.mp4',
+    stillSrc: '/exoskeleton/game-stage-1-march-v2.jpg',
   },
   {
     id: 'side-step',
@@ -54,8 +54,8 @@ export const EXOSKELETON_ACTIONS: readonly ExoskeletonAction[] = [
     direction: '⇆',
     instruction: '双臂抬起，双手对拍，活动关节。',
     encouragement: '非常厉害，保持住这个状态！',
-    animatedSrc: '/exoskeleton/arm-cross-v1.png',
-    stillSrc: '/exoskeleton/arm-cross-poster-v1.jpg',
+    videoSrc: '/videos/game-stage-4-clap-v2.mp4',
+    stillSrc: '/exoskeleton/game-stage-4-clap-v2.jpg',
   },
   {
     id: 'arm-cross',
@@ -64,8 +64,8 @@ export const EXOSKELETON_ACTIONS: readonly ExoskeletonAction[] = [
     direction: '⌁',
     instruction: '双手轻拍双肩，舒缓肩颈肌肉。',
     encouragement: '再坚持一会，马上就要结束了！',
-    videoSrc: '/videos/shoulder-tap-cartoon-v1.mp4',
-    stillSrc: '/exoskeleton/shoulder-tap-cartoon-poster-v1.jpg',
+    videoSrc: '/videos/game-stage-5-shoulder-tap-v2.mp4',
+    stillSrc: '/exoskeleton/game-stage-5-shoulder-tap-v2.jpg',
   },
   {
     id: 'reach-march',

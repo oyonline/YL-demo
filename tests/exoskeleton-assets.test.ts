@@ -36,12 +36,14 @@ describe('外骨骼动作素材', () => {
     }
   })
 
-  it('第一和第五阶段使用动画视频，其余四阶段保留动态图', () => {
-    expect(EXOSKELETON_ACTIONS[0].videoSrc).toBe('/videos/march-cartoon-refined-v1.mp4')
+  it('第一、第四和第五阶段使用新动画角色视频', () => {
+    expect(EXOSKELETON_ACTIONS[0].videoSrc).toBe('/videos/game-stage-1-march-v2.mp4')
+    expect(EXOSKELETON_ACTIONS[3].title).toBe('上肢拍手')
+    expect(EXOSKELETON_ACTIONS[3].videoSrc).toBe('/videos/game-stage-4-clap-v2.mp4')
     expect(EXOSKELETON_ACTIONS[4].title).toBe('上肢拍肩')
-    expect(EXOSKELETON_ACTIONS[4].videoSrc).toBe('/videos/shoulder-tap-cartoon-v1.mp4')
+    expect(EXOSKELETON_ACTIONS[4].videoSrc).toBe('/videos/game-stage-5-shoulder-tap-v2.mp4')
     expect(EXOSKELETON_ACTIONS[1].animatedSrc).toBe('/exoskeleton/side-step-v9.png')
-    expect(EXOSKELETON_ACTIONS.filter((_, index) => index !== 0 && index !== 4)
+    expect(EXOSKELETON_ACTIONS.filter((_, index) => ![0, 3, 4].includes(index))
       .every((action) => action.animatedSrc && !action.videoSrc)).toBe(true)
   })
 

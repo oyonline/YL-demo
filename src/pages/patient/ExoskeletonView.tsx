@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { IconAlert, IconCheck, IconHome, IconPlay, IconShield } from '../../components/Icons'
 import { CelebrationCanvas } from '../../components/CelebrationCanvas'
 import { usePatientData } from '../../data/context'
 import { toISODate } from '../../data/seed'
+import { tasksForDate } from '../../data/taskSchedule'
 import {
   EXOSKELETON_ACTIONS,
   EXOSKELETON_TASK_ID,
@@ -18,12 +19,16 @@ const STANDARD_CELEBRATION_MS = 2600
 const FINAL_CELEBRATION_MS = 3000
 
 export function ExoskeletonView() {
-  const { patient, taskDefs } = usePatientData()
+  const { patient, taskDefs, taskSchedule } = usePatientData()
+  const [searchParams] = useSearchParams()
   const state = useDemoState()
-  const task = taskDefs.find((candidate) => candidate.id === EXOSKELETON_TASK_ID)
   const today = toISODate(new Date())
+  const previewDate = searchParams.get('date') ?? ''
+  const isPlanPreview = searchParams.get('mode') === 'preview' && /^\d{4}-\d{2}-\d{2}$/.test(previewDate)
+  const task = (isPlanPreview ? tasksForDate(taskSchedule, previewDate) : taskDefs)
+    .find((candidate) => candidate.id === EXOSKELETON_TASK_ID)
   const checkIn = state.checkIns.find((entry) => entry.taskId === task?.id && entry.date === today)
-  const alreadyComplete = task ? effectiveStatus(task, checkIn) === 'done' : false
+  const alreadyComplete = !isPlanPreview && task ? effectiveStatus(task, checkIn) === 'done' : false
   const [session, setSession] = useState(() => createExoskeletonSession(alreadyComplete))
   const [guardianReady, setGuardianReady] = useState(false)
   const prefersReducedMotion = usePrefersReducedMotion()
@@ -103,7 +108,7 @@ export function ExoskeletonView() {
   }
 
   function send(event: ExoskeletonEvent) {
-    if ((event.type === 'ACTION_DONE' || event.type === 'STOP') && viewSession.phase === 'training') {
+    if (!isPlanPreview && (event.type === 'ACTION_DONE' || event.type === 'STOP') && viewSession.phase === 'training') {
       const completedAt = new Date()
       const startedAt = actionStartedAtRef.current ?? completedAt
       const action = EXOSKELETON_ACTIONS[viewSession.actionIndex]
@@ -125,7 +130,7 @@ export function ExoskeletonView() {
     }
     const result = transitionExoskeletonSession(viewSession, event)
     setSession(result.state)
-    if (result.effect === 'MARK_TODAY_DONE' && !submittedRef.current) {
+    if (!isPlanPreview && result.effect === 'MARK_TODAY_DONE' && !submittedRef.current) {
       if (alreadyComplete) {
         submittedRef.current = true
         setSyncStatus('success')
@@ -136,7 +141,7 @@ export function ExoskeletonView() {
   }
 
   async function submitCompletion() {
-    if (submittedRef.current) return
+    if (isPlanPreview || submittedRef.current) return
     submittedRef.current = true
     setSyncStatus('pending')
     const ok = await setCheckInWithServerAck(EXOSKELETON_TASK_ID, 'done')
@@ -201,15 +206,19 @@ export function ExoskeletonView() {
             </span>
             <span className="exo-praise-kicker">{finishedAllActions ? '六项挑战全部完成' : `完成第 ${celebrationLevel} 阶段`}</span>
             <strong>{celebrationAction.encouragement}</strong>
-            <span>{finishedAllActions ? '今日律动训练顺利通关' : '即将自动进入下一环节'}</span>
+            <span>{finishedAllActions ? (isPlanPreview ? '本次动作体验顺利通关' : '今日律动训练顺利通关') : '即将自动进入下一环节'}</span>
           </div>
         </div>
       )}
       <section className="exo-overview" aria-labelledby="exo-page-title">
         <div className="exo-overview-copy">
-          <div className="exo-kicker">今日训练 · {task.scheduledTime}</div>
+          <div className="exo-kicker">{isPlanPreview ? `${previewDate} 计划体验` : '今日训练'} · {task.scheduledTime}</div>
           <h1 id="exo-page-title">外骨骼助力行走</h1>
-          <p className="exo-lead">训练包含下肢步态与上肢协同动作；完成安全确认后，跟随下方画面逐项练习并打卡。</p>
+          <p className="exo-lead">
+            {isPlanPreview
+              ? '这是未来计划的提前体验，不会写入打卡或训练记录；完成安全确认后，可跟随下方画面逐项熟悉动作。'
+              : '训练包含下肢步态与上肢协同动作；完成安全确认后，跟随下方画面逐项练习并打卡。'}
+          </p>
           <div className="exo-meta">
             <span><b>{EXOSKELETON_ACTIONS.length}</b> 个训练阶段</span>
             {task.durationMin && <span>约 <b>{task.durationMin}</b> 分钟</span>}
@@ -219,7 +228,7 @@ export function ExoskeletonView() {
 
         <div className="exo-overview-score" data-complete={finishedAllActions}>
           <strong className="num">{viewSession.completedCount}<small> / {EXOSKELETON_ACTIONS.length}</small></strong>
-          <span>{finishedAllActions ? '今日训练已完成' : '动作完成进度'}</span>
+          <span>{finishedAllActions ? (isPlanPreview ? '本次体验已完成' : '今日训练已完成') : (isPlanPreview ? '动作体验进度' : '动作完成进度')}</span>
         </div>
 
         <div className="exo-safety-box">
@@ -242,11 +251,11 @@ export function ExoskeletonView() {
           </label>
           {viewSession.phase === 'ready' ? (
             <button className="btn exo-primary" disabled={!guardianReady} onClick={startTraining}>
-              开始训练 <span aria-hidden="true">→</span>
+              {isPlanPreview ? '开始体验' : '开始训练'} <span aria-hidden="true">→</span>
             </button>
           ) : (
             <span className="exo-started-state">
-              <IconCheck size={17} /> {finishedAllActions ? '今日训练已完成' : '已进入训练流程'}
+              <IconCheck size={17} /> {finishedAllActions ? (isPlanPreview ? '本次体验已完成' : '今日训练已完成') : (isPlanPreview ? '已进入体验流程' : '已进入训练流程')}
             </span>
           )}
         </div>
@@ -457,7 +466,7 @@ export function ExoskeletonView() {
                       <span className="exo-step-done-mark"><IconCheck size={18} /></span>
                       <span>
                         <strong>本项挑战完成</strong>
-                        <small>训练进度 +1，继续保持</small>
+                        <small>{isPlanPreview ? '体验进度 +1，继续保持' : '训练进度 +1，继续保持'}</small>
                       </span>
                       <b aria-hidden="true">✦</b>
                     </div>
@@ -472,17 +481,21 @@ export function ExoskeletonView() {
           <section className="exo-finish-panel" aria-labelledby="exo-finish-title">
             <div className="exo-result-mark"><IconCheck size={38} /></div>
             <div>
-              <div className="exo-kicker">今日训练完成</div>
+              <div className="exo-kicker">{isPlanPreview ? '未来计划体验完成' : '今日训练完成'}</div>
               <h2 id="exo-finish-title">{EXOSKELETON_ACTIONS.length} 个训练阶段全部完成</h2>
               <p>
-                {syncStatus === 'pending'
+                {isPlanPreview
+                  ? '本次仅用于提前熟悉动作，没有生成未来日期打卡或训练记录。'
+                  : syncStatus === 'pending'
                   ? `${patient.name}今天完成得很棒，完成记录正在同步给护理员。`
                   : syncStatus === 'failed'
                     ? '动作已经完成，但记录尚未同步，请检查网络后重试。'
                     : `${patient.name}今天完成得很棒，完成记录已同步给护理员。`}
               </p>
               <div className="exo-sync-status" role="status" aria-live="polite" data-state={syncStatus}>
-                {syncStatus === 'pending'
+                {isPlanPreview
+                  ? '体验记录未写入'
+                  : syncStatus === 'pending'
                   ? '正在同步完成记录…'
                   : syncStatus === 'failed'
                     ? '完成记录同步失败'
@@ -490,7 +503,7 @@ export function ExoskeletonView() {
               </div>
             </div>
             <div className="exo-finish-actions">
-              {syncStatus === 'failed' && (
+              {!isPlanPreview && syncStatus === 'failed' && (
                 <button className="btn exo-primary" onClick={() => void submitCompletion()}>重新同步</button>
               )}
               <Link className="btn-quiet exo-secondary" to="/patient"><IconHome size={17} /> 返回首页</Link>
