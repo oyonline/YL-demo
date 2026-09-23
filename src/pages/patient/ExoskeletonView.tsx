@@ -213,7 +213,7 @@ export function ExoskeletonView() {
       <section className="exo-overview" aria-labelledby="exo-page-title">
         <div className="exo-overview-copy">
           <div className="exo-kicker">{isPlanPreview ? `${previewDate} 计划体验` : '今日训练'} · {task.scheduledTime}</div>
-          <h1 id="exo-page-title">外骨骼助力行走</h1>
+          <h1 id="exo-page-title">{task?.title ?? '智能辅具助力行走'}</h1>
           <p className="exo-lead">
             {isPlanPreview
               ? '这是未来计划的提前体验，不会写入打卡或训练记录；完成安全确认后，可跟随下方画面逐项熟悉动作。'
@@ -276,7 +276,7 @@ export function ExoskeletonView() {
         <div
           className="exo-progress"
           role="progressbar"
-          aria-label="外骨骼助力行走训练进度"
+          aria-label="智能辅具助力行走训练进度"
           aria-valuemin={0}
           aria-valuemax={EXOSKELETON_ACTIONS.length}
           aria-valuenow={viewSession.completedCount}

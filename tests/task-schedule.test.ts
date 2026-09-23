@@ -3,15 +3,18 @@ import {
   CURRENT_PLAN_START,
   FEEDING_PLAN_END,
   FEEDING_PLAN_START,
+  FEEDING_TASKS,
+  LEGACY_FEEDING_PLAN_END,
+  LEGACY_FEEDING_PLAN_START,
   SEPTEMBER_FEEDING_TASKS,
   TASK_SCHEDULE,
 } from '../src/data/feedingPlan.ts'
 import { tasksForDate } from '../src/data/taskSchedule.ts'
 
 describe('日期分段康复计划', () => {
-  it('9 月 1 日至 28 日每天使用用户提供的七项鼻饲饮食计划', () => {
-    expect(tasksForDate(TASK_SCHEDULE, FEEDING_PLAN_START)).toEqual(SEPTEMBER_FEEDING_TASKS)
-    expect(tasksForDate(TASK_SCHEDULE, FEEDING_PLAN_END)).toEqual(SEPTEMBER_FEEDING_TASKS)
+  it('9 月 27 日前保留旧七项饮食与用药计划', () => {
+    expect(tasksForDate(TASK_SCHEDULE, LEGACY_FEEDING_PLAN_START)).toEqual(SEPTEMBER_FEEDING_TASKS)
+    expect(tasksForDate(TASK_SCHEDULE, LEGACY_FEEDING_PLAN_END)).toEqual(SEPTEMBER_FEEDING_TASKS)
     expect(SEPTEMBER_FEEDING_TASKS.map((task) => [task.scheduledTime, task.title, task.instruction])).toEqual([
       ['07:00', '正餐1', '山药瘦肉粥'],
       ['07:30', '鼻饲后给予降压药', '做好冲管'],
@@ -24,10 +27,29 @@ describe('日期分段康复计划', () => {
     expect(SEPTEMBER_FEEDING_TASKS.every((task) => task.origin === 'user_provided')).toBe(true)
   })
 
-  it('9 月 29 日起恢复原有七项训练计划', () => {
+  it('9 月 27 日至 11 月 26 日使用六项新饮食计划', () => {
+    expect(tasksForDate(TASK_SCHEDULE, FEEDING_PLAN_START)).toEqual(FEEDING_TASKS)
+    expect(tasksForDate(TASK_SCHEDULE, FEEDING_PLAN_END)).toEqual(FEEDING_TASKS)
+    expect(FEEDING_TASKS.map((task) => [task.scheduledTime, task.title, task.instruction])).toEqual([
+      ['08:00', '第一餐正餐', '山药瘦肉粥'],
+      ['12:00', '第二餐正餐', '菠菜鱼片粥'],
+      ['14:00', '第一餐辅餐', '过滤果蔬汁'],
+      ['16:00', '第三餐正餐', '胡萝卜鸡肉粥'],
+      ['18:00', '第二餐辅餐', '过滤果蔬汁'],
+      ['20:00', '第四餐正餐', '去油南瓜排骨粥'],
+    ])
+    expect(FEEDING_TASKS.map((task) => task.id)).not.toContain('task-feed-medication')
+  })
+
+  it('11 月 27 日起使用五项康复计划', () => {
     const current = tasksForDate(TASK_SCHEDULE, CURRENT_PLAN_START)
-    expect(current).toHaveLength(7)
-    expect(current.map((task) => task.id)).toContain('task-cognition')
+    expect(current.map((task) => [task.scheduledTime, task.title])).toEqual([
+      ['07:00', '晨起测量血压'],
+      ['15:00', '血压测量'],
+      ['15:30', '智能辅具助力行走'],
+      ['16:30', '非遗踏鼓'],
+      ['20:30', '睡前测量血压'],
+    ])
     expect(current.map((task) => task.id)).not.toContain('task-feed-meal-1')
   })
 

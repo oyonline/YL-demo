@@ -137,61 +137,35 @@ export const therapist: Therapist = {
 }
 
 /**
- * 今日任务模板 —— 取自甲方《银康安馨·扣子智能体演示流程与内容脚本》环节四的
- * 任务时间线，与王萍资料对齐。
- * 训练项目为「准备期（第 1 周）」方案。
+ * 2026 年 11 月 27 日起执行的康复任务模板。
  */
 const RAW_TASKS: TaskDef[] = [
   {
     id: 'task-vitals-morning',
     patientId: PATIENT_ID,
     kind: 'record',
-    title: '晨起测血压',
+    title: '晨起测量血压',
     scheduledTime: '07:00',
     instruction: '安静休息后测量血压并记录。',
     cautions: ['注意步态失衡，移动时全程有人保护', '正常范围 90–139 / 60–89 mmHg，超出请复测一次再反馈'],
     origin: 'therapist_confirmed',
   },
   {
-    id: 'task-med-morning',
+    id: 'task-vitals-afternoon',
     patientId: PATIENT_ID,
-    kind: 'medication',
-    title: '服用降压药',
-    scheduledTime: '07:30',
-    instruction: '按医嘱服用降压药。',
-    cautions: ['漏服不可自行补服双倍剂量', '如有头晕请记录并告知护理员', '药名与剂量以医师医嘱为准'],
-    origin: 'therapist_confirmed',
-  },
-  {
-    id: 'task-lower-limb',
-    patientId: PATIENT_ID,
-    kind: 'training',
-    title: '吞咽训练',
-    scheduledTime: '08:00',
-    instruction: '按页面分步说明完成吞咽训练。',
-    cautions: ['全程须有照护人在旁', '出现明显不适立即停止并联系专业人员'],
-    videoId: 'v-swallow',
-    reps: '按计划完成',
-    durationMin: 10,
-    origin: 'therapist_confirmed',
-  },
-  {
-    id: 'task-swallow',
-    patientId: PATIENT_ID,
-    kind: 'training',
-    title: '鼻饲喂食',
-    scheduledTime: '08:30',
-    instruction: '按资料中的 3-1-3 检查法与鼻饲流程执行：抬高床头、抽吸胃液、温水润管、鼻饲喂食、清洗胃管，结束后保持体位 30～60 分钟。',
-    cautions: ['鼻饲时抬高床头 30～45°', '出现腹胀或腹泻立即停止并联系专业人员'],
-    reps: '按鼻饲流程完成',
+    kind: 'record',
+    title: '血压测量',
+    scheduledTime: '15:00',
+    instruction: '测量血压并记录。',
+    cautions: [],
     origin: 'therapist_confirmed',
   },
   {
     id: 'task-cognition',
     patientId: PATIENT_ID,
     kind: 'training',
-    title: '外骨骼助力行走',
-    scheduledTime: '16:00',
+    title: '智能辅具助力行走',
+    scheduledTime: '15:30',
     instruction: '完成设备与环境检查后，在照护人陪同下跟随动态图依次完成踏步热身、左右侧步、步态衔接、上肢开合、双臂交叉和伸臂抬腿六个阶段。',
     cautions: ['全程须有照护人在旁保护', '步态不稳或出现不适立即停止'],
     reps: '下肢步态训练 + 上肢协同训练（共 6 个阶段）',
@@ -202,8 +176,8 @@ const RAW_TASKS: TaskDef[] = [
     id: 'task-skin',
     patientId: PATIENT_ID,
     kind: 'training',
-    title: '音乐律动操',
-    scheduledTime: '17:00',
+    title: '非遗踏鼓',
+    scheduledTime: '16:30',
     instruction: '充分热身后，跟随音乐完成律动训练。',
     cautions: ['建议时长 10 分钟', '出现头晕、疼痛或明显疲劳立即停止'],
     videoId: 'v-drum',

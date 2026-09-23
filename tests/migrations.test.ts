@@ -37,6 +37,7 @@ describe('数据库迁移', () => {
       '0015_update_wang_ping_psychosocial.sql',
       '0016_reorganize_video_categories.sql',
       '0017_update_wang_ping_swallowing_grade.sql',
+      '0018_update_care_plan_periods.sql',
     ])
   })
 
