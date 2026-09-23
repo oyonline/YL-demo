@@ -28,6 +28,7 @@ export function ExoskeletonView() {
   const isPlanPreview = searchParams.get('mode') === 'preview' && /^\d{4}-\d{2}-\d{2}$/.test(previewDate)
   const actionDate = isPlanPreview ? previewDate : today
   const actions = exoskeletonActionsForDate(actionDate)
+  const trainingPhaseLabel = actions.length === 3 ? '阶段一' : '阶段二'
   const task = (isPlanPreview ? tasksForDate(taskSchedule, previewDate) : taskDefs)
     .find((candidate) => candidate.id === EXOSKELETON_TASK_ID)
   const checkIn = state.checkIns.find((entry) => entry.taskId === task?.id && entry.date === today)
@@ -240,7 +241,9 @@ export function ExoskeletonView() {
       <section className="exo-overview" aria-labelledby="exo-page-title">
         <div className="exo-overview-copy">
           <div className="exo-kicker">{isPlanPreview ? `${previewDate} 计划体验` : '今日训练'} · {task.scheduledTime}</div>
-          <h1 id="exo-page-title">{task?.title ?? '智能辅具助力行走'}</h1>
+          <h1 id="exo-page-title">
+            {task?.title ?? '智能辅具助力行走'}（{trainingPhaseLabel}）
+          </h1>
           <p className="exo-lead">
             {isPlanPreview
               ? '这是未来计划的提前体验，不会写入打卡或训练记录；完成安全确认后，可跟随下方画面逐项熟悉动作。'
