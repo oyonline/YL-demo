@@ -38,6 +38,7 @@ describe('数据库迁移', () => {
       '0016_reorganize_video_categories.sql',
       '0017_update_wang_ping_swallowing_grade.sql',
       '0018_update_care_plan_periods.sql',
+      '0019_clear_september_checkins.sql',
     ])
   })
 
@@ -96,6 +97,41 @@ describe('数据库迁移', () => {
     expect((getDb().prepare("SELECT count(*) c FROM check_ins WHERE patient_id='p-001'").get() as any).c).toBe(126)
   })
 
+  it('0019 清空 9 月 1 日至 26 日记录且不影响 27 日', () => {
+    getDb().prepare("DELETE FROM schema_migrations WHERE name = '0019_clear_september_checkins.sql'").run()
+    closeDb()
+    const prepared = getDb()
+    const insert = prepared.prepare(`INSERT INTO check_ins
+      (id,patient_id,task_id,date,status,at) VALUES (?,?,?,?,?,?)`)
+    insert.run('ci-september-26', 'p-001', 'task-feed-v2-meal-1', '2026-09-26', 'done', '2026-09-26T08:05:00+08:00')
+    insert.run('ci-september-27', 'p-001', 'task-feed-v2-meal-1', '2026-09-27', 'done', '2026-09-27T08:05:00+08:00')
+    prepared.prepare("DELETE FROM schema_migrations WHERE name = '0019_clear_september_checkins.sql'").run()
+
+    closeDb()
+    const migrated = getDb()
+    expect(migrated.prepare(`SELECT count(*) c FROM check_ins
+      WHERE patient_id='p-001' AND date BETWEEN '2026-09-01' AND '2026-09-26'`).get()).toEqual({ c: 0 })
+    expect(migrated.prepare(`SELECT id FROM check_ins
+      WHERE patient_id='p-001' AND date='2026-09-27'`).get()).toEqual({ id: 'ci-september-27' })
+    expect(migrated.prepare(`SELECT scheduled_time, title FROM task_defs
+      WHERE patient_id='p-001'
+        AND active_from <= '2026-09-26'
+        AND (active_to IS NULL OR active_to >= '2026-09-26')
+      ORDER BY scheduled_time`).all()).toEqual([])
+    expect(migrated.prepare(`SELECT scheduled_time, title FROM task_defs
+      WHERE patient_id='p-001'
+        AND active_from <= '2026-09-27'
+        AND (active_to IS NULL OR active_to >= '2026-09-27')
+      ORDER BY scheduled_time`).all()).toEqual([
+      { scheduled_time: '08:00', title: '第一餐正餐' },
+      { scheduled_time: '12:00', title: '第二餐正餐' },
+      { scheduled_time: '14:00', title: '第一餐辅餐' },
+      { scheduled_time: '16:00', title: '第三餐正餐' },
+      { scheduled_time: '18:00', title: '第二餐辅餐' },
+      { scheduled_time: '20:00', title: '第四餐正餐' },
+    ])
+  })
+
   it('患者列表今日完成数不统计已经失效的任务', () => {
     const db = getDb()
     db.prepare(`INSERT INTO task_defs
@@ -110,7 +146,7 @@ describe('数据库迁移', () => {
       '2026-09-22', '2026-09-22', '2026-09-22',
       '2026-09-22', 'u-test', 'p-001',
     ) as any[]
-    expect(rows[0].today_total).toBe(7)
+    expect(rows[0].today_total).toBe(0)
     expect(rows[0].today_done).toBe(0)
   })
 

@@ -10,7 +10,7 @@
  * - 标注 SYNTHETIC 的字段是甲方未提供、为叙事完整而虚构的，勿当作甲方数据引用。
  */
 
-import type { Patient, TaskDef, VideoAsset, Therapist, CheckIn, CheckInStatus, GameStageRecord, ISODate, RosterEntry, VitalRecord } from './types'
+import type { Patient, TaskDef, VideoAsset, Therapist, CheckIn, GameStageRecord, ISODate, RosterEntry, VitalRecord } from './types'
 
 export const PATIENT_ID = 'p-001'
 
@@ -334,12 +334,12 @@ export const VIDEO_CATEGORIES = ['基础照护类', '生活照护类', '吞咽�
 
 
 
-/* ---------- 历史打卡：为打卡日历提供演示数据 ---------- */
+/* ---------- 历史打卡 ---------- */
 
 /** 居家康复建档日（首次入户评估日）—— 打卡历史与日历可翻阅范围的起点 */
 export const HOMECARE_START: ISODate = '2026-09-12'
 
-/** 本轮演示计划从 9 月 1 日开始，历史记录也从这一天铺设。 */
+/** 本轮演示计划从 9 月 1 日开始；该日期保留给重置接口兼容使用。 */
 export const SIMULATED_HISTORY_START: ISODate = '2026-09-01'
 
 export function toISODate(d: Date): ISODate {
@@ -349,64 +349,18 @@ export function toISODate(d: Date): ISODate {
   return `${y}-${m}-${day}`
 }
 
-const FEEDING_HISTORY_TASKS = [
-  ['task-feed-meal-1', '07:00'],
-  ['task-feed-medication', '07:30'],
-  ['task-feed-meal-2', '11:00'],
-  ['task-feed-snack-1', '13:00'],
-  ['task-feed-meal-3', '15:00'],
-  ['task-feed-snack-2', '17:00'],
-  ['task-feed-meal-4', '19:00'],
-] as const
-
-/**
- * 固定历史模式：7 表示全部完成，1–6 表示部分完成，0 表示全部未完成，
- * null 则整天不写记录。用固定日期和固定模式，保证每次演示结果一致。
- */
-const SEPTEMBER_HISTORY_PATTERN: ReadonlyArray<readonly [ISODate, number | null]> = [
-  ['2026-09-01', 7], ['2026-09-02', 7], ['2026-09-03', 5], ['2026-09-04', 0],
-  ['2026-09-05', 7], ['2026-09-06', 7], ['2026-09-07', 4], ['2026-09-08', null],
-  ['2026-09-09', 7], ['2026-09-10', 7], ['2026-09-11', 3], ['2026-09-12', 0],
-  ['2026-09-13', 7], ['2026-09-14', 7], ['2026-09-15', 5], ['2026-09-16', null],
-  ['2026-09-17', 7], ['2026-09-18', 7], ['2026-09-19', 4], ['2026-09-20', 0],
-  ['2026-09-21', null],
-]
-
-/** 为打卡日历生成 9 月固定演示历史；今天和未来日期永远不预填。 */
-export function buildHistory(today: Date, fromISO: ISODate = SIMULATED_HISTORY_START): CheckIn[] {
-  const todayISO = toISODate(today)
-  return SEPTEMBER_HISTORY_PATTERN
-    .filter(([date, doneCount]) => doneCount !== null && date >= fromISO && date < todayISO)
-    .flatMap(([date, doneCount]) => FEEDING_HISTORY_TASKS.map(([taskId, time], index) => {
-      const status: CheckInStatus = doneCount === 7
-        ? 'done'
-        : doneCount === 0
-          ? 'missed'
-          : index < doneCount!
-            ? 'done'
-            : index === doneCount
-              ? 'difficulty'
-              : 'missed'
-      const recorded = status === 'done' || status === 'difficulty'
-      return {
-        id: `ci-demo-${date}-${taskId}`,
-        patientId: PATIENT_ID,
-        taskId,
-        date,
-        status,
-        at: recorded ? new Date(`${date}T${time}:00+08:00`).toISOString() : undefined,
-        note: status === 'difficulty' ? '演示记录：执行时遇到困难。' : undefined,
-      }
-    }))
+/** 9 月 1 日至 26 日按用户确认保持空白，重置数据库时也不补历史打卡。 */
+export function buildHistory(_today: Date, _fromISO: ISODate = SIMULATED_HISTORY_START): CheckIn[] {
+  return []
 }
 
-/** 这批固定历史只属于王萍演示病例，其他患者重置时不得跨患者复用任务。 */
+/** 所有患者重置时都不自动补入演示打卡。 */
 export function buildHistoryForPatient(
   today: Date,
-  patientId: string,
+  _patientId: string,
   fromISO: ISODate = SIMULATED_HISTORY_START,
 ): CheckIn[] {
-  return patientId === PATIENT_ID ? buildHistory(today, fromISO) : []
+  return buildHistory(today, fromISO)
 }
 
 /* ---------- 血压：安全范围与演示基线 ---------- */

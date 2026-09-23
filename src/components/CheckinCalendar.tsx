@@ -57,10 +57,13 @@ export function CheckinCalendar() {
       if (key > todayKey) st = 'future'
       else if (key < startKey || total === 0) st = 'norecord'
       else if (key === todayKey) {
-        // 今天必须与今日页同一判定，否则两处会各说各话
-        const eff = dayTasks.map((t) => effectiveStatus(t, hits.find((c) => c.taskId === t.id)))
-        d = eff.filter((x) => x === 'done').length
-        st = d >= total ? 'full' : d === 0 ? 'none' : 'partial'
+        if (hits.length === 0) st = 'norecord'
+        else {
+          // 今天已有记录时必须与今日页同一判定，否则两处会各说各话
+          const eff = dayTasks.map((t) => effectiveStatus(t, hits.find((c) => c.taskId === t.id)))
+          d = eff.filter((x) => x === 'done').length
+          st = d >= total ? 'full' : d === 0 ? 'none' : 'partial'
+        }
       } else if (hits.length === 0) st = 'norecord'
       else st = done >= total ? 'full' : done === 0 ? 'none' : 'partial'
       out.push({ key, day, state: st, done: d, total })
@@ -81,7 +84,7 @@ export function CheckinCalendar() {
   const detail = selected
     ? selectedTasks.map((t) => {
         const hit = state.checkIns.find((c) => c.date === selected && c.taskId === t.id)
-        const status = selected === todayKey ? effectiveStatus(t, hit) : hit?.status ?? 'unrecorded'
+        const status = !hit ? 'unrecorded' : selected === todayKey ? effectiveStatus(t, hit) : hit.status
         return { task: t, status, hasRecord: !!hit }
       })
     : []

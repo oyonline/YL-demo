@@ -4,31 +4,14 @@ import {
   FEEDING_PLAN_END,
   FEEDING_PLAN_START,
   FEEDING_TASKS,
-  LEGACY_FEEDING_PLAN_END,
-  LEGACY_FEEDING_PLAN_START,
-  SEPTEMBER_FEEDING_TASKS,
   TASK_SCHEDULE,
 } from '../src/data/feedingPlan.ts'
 import { tasksForDate } from '../src/data/taskSchedule.ts'
 
 describe('日期分段康复计划', () => {
-  it('9 月 27 日前保留旧七项饮食与用药计划', () => {
-    expect(tasksForDate(TASK_SCHEDULE, LEGACY_FEEDING_PLAN_START)).toEqual(SEPTEMBER_FEEDING_TASKS)
-    expect(tasksForDate(TASK_SCHEDULE, LEGACY_FEEDING_PLAN_END)).toEqual(SEPTEMBER_FEEDING_TASKS)
-    expect(SEPTEMBER_FEEDING_TASKS.map((task) => [task.scheduledTime, task.title, task.instruction])).toEqual([
-      ['07:00', '正餐1', '山药瘦肉粥'],
-      ['07:30', '鼻饲后给予降压药', '做好冲管'],
-      ['11:00', '正餐2', '菠菜鱼片粥'],
-      ['13:00', '辅食加餐1', '过滤果蔬汁'],
-      ['15:00', '正餐3', '胡萝卜鸡肉粥'],
-      ['17:00', '辅食加餐2', '过滤果蔬汁'],
-      ['19:00', '正餐4', '去油南瓜排骨粥'],
-    ])
-    expect(SEPTEMBER_FEEDING_TASKS.every((task) => task.origin === 'user_provided')).toBe(true)
-  })
-
-  it('9 月 27 日至 11 月 26 日使用六项新饮食计划', () => {
+  it('9 月 27 日至 11 月 26 日使用六项饮食计划', () => {
     expect(tasksForDate(TASK_SCHEDULE, FEEDING_PLAN_START)).toEqual(FEEDING_TASKS)
+    expect(tasksForDate(TASK_SCHEDULE, '2026-09-27')).toEqual(FEEDING_TASKS)
     expect(tasksForDate(TASK_SCHEDULE, FEEDING_PLAN_END)).toEqual(FEEDING_TASKS)
     expect(FEEDING_TASKS.map((task) => [task.scheduledTime, task.title, task.instruction])).toEqual([
       ['08:00', '第一餐正餐', '山药瘦肉粥'],
@@ -53,7 +36,9 @@ describe('日期分段康复计划', () => {
     expect(current.map((task) => task.id)).not.toContain('task-feed-meal-1')
   })
 
-  it('计划开始日前没有安排', () => {
+  it('9 月 27 日前没有计划', () => {
     expect(tasksForDate(TASK_SCHEDULE, '2026-08-31')).toEqual([])
+    expect(tasksForDate(TASK_SCHEDULE, '2026-09-01')).toEqual([])
+    expect(tasksForDate(TASK_SCHEDULE, '2026-09-26')).toEqual([])
   })
 })
