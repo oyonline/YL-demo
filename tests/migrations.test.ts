@@ -39,6 +39,8 @@ describe('数据库迁移', () => {
       '0017_update_wang_ping_swallowing_grade.sql',
       '0018_update_care_plan_periods.sql',
       '0019_clear_september_checkins.sql',
+      '0020_seed_november_game_progress.sql',
+      '0021_clear_september_game_history.sql',
     ])
   })
 

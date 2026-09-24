@@ -1,7 +1,7 @@
 import { Link, useParams } from 'react-router-dom'
 import { InlineRich } from '../../components/RichText'
 import { usePatientData, useContent } from '../../data/context'
-import { guidanceIcon } from './GuidanceView'
+import { guidanceIcon, guidanceScheduleDisplay } from './GuidanceView'
 import { IconAlert, IconChevron, IconPlay } from '../../components/Icons'
 
 export function GuidanceDetailView() {
@@ -12,6 +12,7 @@ export function GuidanceDetailView() {
   const g = GUIDANCE.find((x) => x.id === id)
   if (!g) return <section className="card card-pad">没有找到这条指导</section>
 
+  const display = guidanceScheduleDisplay(g)
   const video = g.relatedVideoId ? videos.find((v) => v.id === g.relatedVideoId) : undefined
   const others = GUIDANCE.filter((x) => x.id !== g.id)
 
@@ -20,15 +21,15 @@ export function GuidanceDetailView() {
       <div className="crumb">
         <Link to="/patient/guidance">饮食指导</Link>
         <span>/</span>
-        <span>{g.title}</span>
+        <span>{display.title}</span>
       </div>
 
       <section className="card card-pad">
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 18 }}>
           <span className="grow-ico" style={{ width: 52, height: 52 }}>{guidanceIcon(g.id)}</span>
           <span>
-            <h1 className="card-title" style={{ fontSize: 'var(--t-xl)' }}>{g.title}</h1>
-            <p className="card-note" style={{ marginTop: 3 }}>{g.summary}</p>
+            <h1 className="card-title" style={{ fontSize: 'var(--t-xl)' }}>{display.title}</h1>
+            <p className="card-note" style={{ marginTop: 3 }}>{display.summary}</p>
           </span>
         </div>
 
@@ -73,8 +74,8 @@ export function GuidanceDetailView() {
             <Link className="grow" to={`/patient/guidance/${o.id}`} key={o.id}>
               <span className="grow-ico">{guidanceIcon(o.id)}</span>
               <span style={{ flex: 1 }}>
-                <span className="grow-t">{o.title}</span>
-                <span className="grow-s">{o.summary}</span>
+                <span className="grow-t">{guidanceScheduleDisplay(o).title}</span>
+                <span className="grow-s">{guidanceScheduleDisplay(o).summary}</span>
               </span>
               <span className="grow-go"><IconChevron /></span>
             </Link>

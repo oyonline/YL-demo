@@ -5,7 +5,7 @@ import { usePatientData } from '../../data/context'
 import { addVital, refreshDemoState, useDemoState } from '../../store/store'
 import { BpChart } from '../../components/BpChart'
 import { IconAlert, IconCheck, IconHeart } from '../../components/Icons'
-import { exoskeletonActionsForDate } from '../../features/exoskeleton/session'
+import { EXOSKELETON_ACTIONS } from '../../features/exoskeleton/session'
 
 /**
  * 健康数据（甲方需求书 3.5）。
@@ -81,7 +81,7 @@ function GameDataPanel() {
   const current = todayRecords.length ? todayRecords : latest
   const completed = current.filter((record) => record.status === 'completed')
   const totalSec = completed.reduce((sum, record) => sum + record.durationSec, 0)
-  const currentActions = exoskeletonActionsForDate(current[0]?.date ?? today)
+  const currentActions = EXOSKELETON_ACTIONS
 
   return (
     <div className="game-data stack">
@@ -134,7 +134,7 @@ function GameDataPanel() {
           {sessionList.slice(0, 8).map((records) => {
             const done = records.filter((record) => record.status === 'completed')
             const seconds = done.reduce((sum, record) => sum + record.durationSec, 0)
-            const sessionActionCount = exoskeletonActionsForDate(records[0].date).length
+            const sessionActionCount = EXOSKELETON_ACTIONS.length
             return (
               <div key={records[0].sessionId}>
                 <time>{formatShortDate(records[0].date)}</time>

@@ -416,37 +416,33 @@ export function buildVitals(today: Date): VitalRecord[] {
   })
 }
 
-/** 三次固定的互动游戏历史，供初次演示与“重置演示”恢复使用。 */
-export function buildGameStageHistory(today: Date, patientId = PATIENT_ID): GameStageRecord[] {
-  const actions = [
-    ['march-warmup', '踏步热身'], ['side-step', '左右侧步'],
-    ['walking-transition', '前后侧步'], ['arm-step', '上肢拍手'],
-    ['arm-cross', '上肢拍肩'], ['reach-march', '上肢交替拍手肘'],
+/** 固定的互动游戏历史，供初次演示与“重置演示”恢复使用。 */
+export function buildGameStageHistory(_today: Date, patientId = PATIENT_ID): GameStageRecord[] {
+  const novemberIntro = [
+    { actionIndex: 0, actionId: 'march-warmup', actionTitle: '踏步热身', startedAt: '2026-11-27T15:30:00+08:00', durationSec: 106 },
+    { actionIndex: 1, actionId: 'side-step', actionTitle: '左右侧步', startedAt: '2026-11-27T15:31:46+08:00', durationSec: 107 },
+    { actionIndex: 2, actionId: 'walking-transition', actionTitle: '前后侧步', startedAt: '2026-11-27T15:33:33+08:00', durationSec: 107 },
   ] as const
-  const durationSets = [[128, 112, 134, 96, 103, 141], [121, 106, 126, 91, 98, 132], [116, 101, 118, 87, 94, 124]]
-  return durationSets.flatMap((durations, dayIndex) => {
-    const date = new Date(today)
-    date.setDate(date.getDate() - (3 - dayIndex))
-    const dateISO = toISODate(date)
-    return actions.map(([actionId, actionTitle], actionIndex) => {
-      const start = new Date(`${dateISO}T16:${String(actionIndex * 3).padStart(2, '0')}:00+08:00`)
-      const durationSec = durations[actionIndex]
+
+  return [
+    ...novemberIntro.map((record) => {
+      const startedAt = new Date(record.startedAt)
       return {
-        id: `game-demo-${dayIndex}-${actionIndex}`,
+        id: `game-demo-2026-11-27-${record.actionIndex}`,
         patientId,
-        sessionId: `game-demo-${dayIndex}`,
+        sessionId: 'game-demo-2026-11-27',
         taskId: 'task-cognition',
-        date: dateISO,
-        actionId,
-        actionTitle,
-        actionIndex,
-        startedAt: start.toISOString(),
-        completedAt: new Date(start.getTime() + durationSec * 1000).toISOString(),
-        durationSec,
+        date: '2026-11-27',
+        actionId: record.actionId,
+        actionTitle: record.actionTitle,
+        actionIndex: record.actionIndex,
+        startedAt: startedAt.toISOString(),
+        completedAt: new Date(startedAt.getTime() + record.durationSec * 1000).toISOString(),
+        durationSec: record.durationSec,
         pauseCount: 0,
-        retryCount: dayIndex === 0 && actionIndex === 2 ? 1 : 0,
+        retryCount: 0,
         status: 'completed' as const,
       }
-    })
-  })
+    }),
+  ]
 }
